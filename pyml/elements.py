@@ -4,28 +4,47 @@ import time as ptime
 
 
 def _dom_element(element_tag: str, void=False) -> Callable[..., str]:
-    def element(child: object = None, **kwargs) -> str:
-        child = "" if child is None else str(child)
+    def element(
+        child: object = None,
+        _attrs: dict[str, str | int]
+        | None = None,  # Other attributes that cannot be written using kwargs
+        **kwargs,
+    ) -> str:
+        child = "" if child is None else child
+        str_children = StringIO()
+        if isinstance(child, list):
+            for ch in child:
+                str_children.write(ch)
+            child = str_children.getvalue()
+        else:
+            child = str(child)
+
+        # process element attributes attributes
+        processed_kwargs = {}
+        for attr, value in kwargs.items():
+            formatted_attr = attr.replace("_", "-")
+            processed_kwargs[formatted_attr] = value
+
+        if _attrs is not None:
+            processed_kwargs = {**processed_kwargs, **_attrs}
 
         attrs = StringIO()
-        for i, (attr, value) in enumerate(kwargs.items()):
+        for i, (attr, value) in enumerate(processed_kwargs.items()):
             match attr:
                 case "class_name":
                     attrs.write(f"class='{value}'")
                 case _:
                     # Swap '_' with '-'
-                    formatted_attr = attr.replace("_", "-")
                     delimeter = (
                         '"' if isinstance(value, str) and "'" in value else "'"
                     )
 
-                    attrs.write(
-                        f"{formatted_attr}={delimeter}{value}{delimeter}"
-                    )
+                    attrs.write(f"{attr}={delimeter}{value}{delimeter}")
 
             if i != len(kwargs.items()) - 1:
                 attrs.write(" ")
         if not void:
+
             return f"<{element_tag} {attrs.getvalue()}>{child}</{element_tag}>"
         else:
             return f"<{element_tag} {attrs.getvalue()}>"
@@ -149,3 +168,5 @@ u = _dom_element("u")
 ul = _dom_element("ul")
 Var = _dom_element("var")
 video = _dom_element("video")
+
+Document = lambda root: f"<!DOCTYPE html>{root}"
