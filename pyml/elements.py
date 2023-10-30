@@ -1,13 +1,11 @@
 from io import StringIO
-from typing import Callable
+from typing import Callable, TypeVar, ParamSpec
 import time as ptime
 
 
-def _dom_element(element_tag: str, void=False) -> Callable:
-    def element(**kwargs) -> str:
-        child = kwargs.get("child", "")
-        if "child" in kwargs:
-            del kwargs["child"]
+def _dom_element(element_tag: str, void=False) -> Callable[..., str]:
+    def element(child: object = None, **kwargs) -> str:
+        child = "" if child is None else str(child)
 
         attrs = StringIO()
         for i, (attr, value) in enumerate(kwargs.items()):
@@ -153,7 +151,7 @@ Var = _dom_element("var")
 video = _dom_element("video")
 
 
-def main():
+def pymain():
 
     start = ptime.time()
 
@@ -161,7 +159,7 @@ def main():
         class_name="hello_world",
         style="background-color: 'blue';",
         child=div(
-            style="background-color: 'yellow'; ",
+            style="background-color: 'yellow';",
             child="Hello world",
         ),
     )
@@ -172,4 +170,4 @@ def main():
     print(res)
 
 
-main()
+pymain()
