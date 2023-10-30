@@ -48,10 +48,6 @@ def test_elements_render_correctly(test_elements_page: str):
             ]
         )
     )
-    print("My page==========")
-    print(etree.tostring(etree.HTML(page), pretty_print=True))
-    print("HTML page==========")
-    print(test_elements_page)
     assert (
         etree.tostring(etree.HTML(page), pretty_print=True)
         == test_elements_page
