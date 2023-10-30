@@ -149,25 +149,3 @@ u = _dom_element("u")
 ul = _dom_element("ul")
 Var = _dom_element("var")
 video = _dom_element("video")
-
-
-def pymain():
-
-    start = ptime.time()
-
-    res = div(
-        class_name="hello_world",
-        style="background-color: 'blue';",
-        child=div(
-            style="background-color: 'yellow';",
-            child="Hello world",
-        ),
-    )
-
-    end = ptime.time()
-
-    print(f"Execution time: {end - start}")
-    print(res)
-
-
-pymain()
