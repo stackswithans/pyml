@@ -19,7 +19,7 @@ def _dom_element(element_tag: str, void=False) -> Callable[..., str]:
         else:
             child = str(child)
 
-        # process element attributes attributes
+        # process element attributes
         processed_kwargs = {}
         for attr, value in kwargs.items():
             formatted_attr = attr.replace("_", "-")

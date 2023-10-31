@@ -9,6 +9,26 @@ def test_elements_page() -> bytes:
         return etree.tostring(etree.HTML(f.read()), pretty_print=True)
 
 
+def test_void_element_renders_correctly():
+    element = Input(value="hello", type="text")
+    assert "<input value='hello' type='text'>"
+
+
+def test_non_str_child_renders_correctly():
+    element = div(child=1)
+    assert "<div>1</div>"
+
+
+def test_class_name_is_converted_correctly():
+    element = div(class_name=1)
+    assert "<div class='1'></div>"
+
+
+def test_attribute_dict_works():
+    element = div(_attrs={"class": "hello", "under_score": "true"})
+    assert "<div class='hello' under_score='true'></div>"
+
+
 def test_elements_render_correctly(test_elements_page: str):
     page = Document(
         html(
