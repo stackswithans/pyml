@@ -5,7 +5,7 @@ import time as ptime
 from dataclasses import dataclass, field
 
 
-ATTR_KWARG = "_attr"
+ATTR_KWARG = "_attrs"
 
 
 @dataclass
@@ -18,12 +18,13 @@ class Element:
     def _render_attributes(self, buffer: StringIO):
 
         attribute_kwarg: dict = self.kwargs.get(ATTR_KWARG, {})
+        if attribute_kwarg:
+            del self.kwargs[ATTR_KWARG]
 
-        attrs_len = len(self.kwargs.items())
-        for i, (attr, value) in enumerate(self.kwargs.items()):
+        for attr, value in self.kwargs.items():
             match attr:
                 case "class_name":
-                    buffer.write(f"class='{value}'")
+                    buffer.write(f" class='{value}'")
                 case _:
                     # Swap '_' with '-'
                     formatted_attr = attr.replace("_", "-")
@@ -32,19 +33,13 @@ class Element:
                     )
 
                     buffer.write(
-                        f"{formatted_attr}={delimeter}{value}{delimeter}"
+                        f" {formatted_attr}={delimeter}{value}{delimeter}"
                     )
 
-            if i != attrs_len - 1:
-                buffer.write(" ")
-
-        attrs_len = len(attribute_kwarg)
-        for i, (attr, value) in enumerate(attribute_kwarg.items()):
+        for attr, value in attribute_kwarg.items():
             # TODO: Throw error on attribute with illegal characters
             delimeter = '"' if isinstance(value, str) and "'" in value else "'"
-            buffer.write(f"{attr}={delimeter}{value}{delimeter}")
-            if i != attrs_len - 1:
-                buffer.write(" ")
+            buffer.write(f" {attr}={delimeter}{value}{delimeter}")
         buffer.write(">")
 
     def _render_child(self, child: Any, buffer: StringIO):
@@ -61,67 +56,25 @@ class Element:
             case _:
                 raise NotImplemented("Invalid node child type")
 
-    def render(self, buffer: StringIO | None = None):
-        el_start = f"<{self.element_tag} "
+    def render(self, buffer: StringIO | None = None) -> str:
+        el_start = f"<{self.element_tag}"
         if buffer is None:
-            buffer = StringIO(el_start)
-        else:
-            buffer.write(el_start)
+            buffer = StringIO()
+        buffer.write(el_start)
 
         self._render_attributes(buffer)
 
         if self.is_void:
-            return
+            return buffer.getvalue()
 
         self._render_child(self.child, buffer)
         buffer.write(f"</{self.element_tag}>")
+        return buffer.getvalue()
 
 
 def _dom_element(element_tag: str, void=False) -> Callable[..., Element]:
-    def element(
-        child: object = None,
-        _attrs: dict[str, str]
-        | None = None,  # Other attributes that cannot be written using kwargs
-        **kwargs,
-    ) -> Element:
-
-        child = "" if child is None else child
-        str_children = StringIO()
-        if isinstance(child, list):
-            for ch in child:
-                str_children.write(ch)
-            child = str_children.getvalue()
-        else:
-            child = str(child)
-
-        # process element attributes
-        processed_kwargs = {}
-        for attr, value in kwargs.items():
-            formatted_attr = attr.replace("_", "-")
-            processed_kwargs[formatted_attr] = value
-
-        if _attrs is not None:
-            processed_kwargs = {**processed_kwargs, **_attrs}
-
-        attrs = StringIO()
-        for i, (attr, value) in enumerate(processed_kwargs.items()):
-            match attr:
-                case "class_name":
-                    attrs.write(f"class='{value}'")
-                case _:
-                    # Swap '_' with '-'
-                    delimeter = (
-                        '"' if isinstance(value, str) and "'" in value else "'"
-                    )
-
-                    attrs.write(f"{attr}={delimeter}{value}{delimeter}")
-
-            if i != len(kwargs.items()) - 1:
-                attrs.write(" ")
-        if not void:
-            return f"<{element_tag} {attrs.getvalue()}>{child}</{element_tag}>"
-        else:
-            return f"<{element_tag} {attrs.getvalue()}>"
+    def element(child: object = None, **kwargs) -> Element:
+        return Element(element_tag, void, child, kwargs)
 
     return element
 
@@ -243,4 +196,4 @@ ul = _dom_element("ul")
 Var = _dom_element("var")
 video = _dom_element("video")
 
-Document = lambda root: f"<!DOCTYPE html>{root}"
+Document = lambda root: f"<!DOCTYPE html>{root.render()}"
