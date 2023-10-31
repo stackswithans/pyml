@@ -1,5 +1,6 @@
 from pyml.elements import *
 import pytest
+import time
 from lxml import etree
 
 
@@ -27,6 +28,14 @@ def test_class_name_is_converted_correctly():
 def test_attribute_dict_works():
     element = div(_attrs={"class": "hello", "under_score": "true"})
     assert "<div class='hello' under_score='true'></div>"
+
+
+def test_attribute_perf():
+    start = time.time()
+    html_res = div(child=[div() for i in range(100)])
+    end = time.time()
+    print(html_res)
+    print("Time: ", end - start)
 
 
 def test_elements_render_correctly(test_elements_page: str):

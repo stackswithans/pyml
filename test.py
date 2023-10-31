@@ -7,20 +7,19 @@ import time as ptime
 def pymain():
 
     start = ptime.time()
-
-    res = div(
-        class_name="hello_world",
-        style="background-color: 'blue';",
-        child=div(
-            style="background-color: 'yellow';",
-            child="Hello world",
-        ),
+    html_res = div(
+        child=[div(child=[div() for i in range(100)]) for i in range(1000)]
     )
-
     end = ptime.time()
+    # print(html_res)
+    print("Pyml time: ", end - start)
 
-    print(f"Execution time: {end - start}")
-    print(res)
+    start = ptime.time()
+    with open("quick_test.html", "r", encoding="utf8") as f:
+        html_res = f.read()
+    end = ptime.time()
+    # print(html_res)
+    print("Opening file time: ", end - start)
 
 
 pymain()

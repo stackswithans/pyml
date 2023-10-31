@@ -1,15 +1,90 @@
+from __future__ import annotations
 from io import StringIO
-from typing import Callable, TypeVar, ParamSpec
+from typing import Callable, TypeVar, ParamSpec, Any
 import time as ptime
+from dataclasses import dataclass, field
 
 
-def _dom_element(element_tag: str, void=False) -> Callable[..., str]:
+ATTR_KWARG = "_attr"
+
+
+@dataclass
+class Element:
+    element_tag: str
+    is_void: bool
+    child: Element | object = None
+    kwargs: dict[str, Any] = field(default_factory=dict)
+
+    def _render_attributes(self, buffer: StringIO):
+
+        attribute_kwarg: dict = self.kwargs.get(ATTR_KWARG, {})
+
+        attrs_len = len(self.kwargs.items())
+        for i, (attr, value) in enumerate(self.kwargs.items()):
+            match attr:
+                case "class_name":
+                    buffer.write(f"class='{value}'")
+                case _:
+                    # Swap '_' with '-'
+                    formatted_attr = attr.replace("_", "-")
+                    delimeter = (
+                        '"' if isinstance(value, str) and "'" in value else "'"
+                    )
+
+                    buffer.write(
+                        f"{formatted_attr}={delimeter}{value}{delimeter}"
+                    )
+
+            if i != attrs_len - 1:
+                buffer.write(" ")
+
+        attrs_len = len(attribute_kwarg)
+        for i, (attr, value) in enumerate(attribute_kwarg.items()):
+            # TODO: Throw error on attribute with illegal characters
+            delimeter = '"' if isinstance(value, str) and "'" in value else "'"
+            buffer.write(f"{attr}={delimeter}{value}{delimeter}")
+            if i != attrs_len - 1:
+                buffer.write(" ")
+        buffer.write(">")
+
+    def _render_child(self, child: Any, buffer: StringIO):
+        match child:
+            case list(children):
+                for child in children:
+                    self._render_child(child, buffer)
+            case Element():
+                child.render(buffer)
+            case int() | float() | str():
+                buffer.write(str(child))
+            case None:
+                return
+            case _:
+                raise NotImplemented("Invalid node child type")
+
+    def render(self, buffer: StringIO | None = None):
+        el_start = f"<{self.element_tag} "
+        if buffer is None:
+            buffer = StringIO(el_start)
+        else:
+            buffer.write(el_start)
+
+        self._render_attributes(buffer)
+
+        if self.is_void:
+            return
+
+        self._render_child(self.child, buffer)
+        buffer.write(f"</{self.element_tag}>")
+
+
+def _dom_element(element_tag: str, void=False) -> Callable[..., Element]:
     def element(
         child: object = None,
-        _attrs: dict[str, str | int]
+        _attrs: dict[str, str]
         | None = None,  # Other attributes that cannot be written using kwargs
         **kwargs,
-    ) -> str:
+    ) -> Element:
+
         child = "" if child is None else child
         str_children = StringIO()
         if isinstance(child, list):
@@ -44,7 +119,6 @@ def _dom_element(element_tag: str, void=False) -> Callable[..., str]:
             if i != len(kwargs.items()) - 1:
                 attrs.write(" ")
         if not void:
-
             return f"<{element_tag} {attrs.getvalue()}>{child}</{element_tag}>"
         else:
             return f"<{element_tag} {attrs.getvalue()}>"
