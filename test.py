@@ -8,7 +8,7 @@ def pymain():
 
     start = ptime.time()
     html_res = div(
-        child=[div(child=[div() for i in range(100)]) for i in range(1000)]
+        child=[div(child=[div() for i in range(1000)]) for i in range(1000)]
     )
     end = ptime.time()
     # print(html_res)

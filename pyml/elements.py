@@ -1,24 +1,69 @@
 from __future__ import annotations
 from io import StringIO
-from typing import Callable, TypeVar, ParamSpec, Any
+from typing import (
+    Callable,
+    TypeVar,
+    ParamSpec,
+    Any,
+    TypeAlias,
+    Mapping,
+    Protocol,
+    runtime_checkable,
+)
 import time as ptime
 from dataclasses import dataclass, field
+from abc import abstractmethod
 
 
 ATTR_KWARG = "_attrs"
+
+
+class HTMLRenderable(Protocol):
+    def render(self, buffer: StringIO | None) -> str:
+        ...
+
+
+@runtime_checkable
+class SupportsStr(Protocol):
+    @abstractmethod
+    def __str__(self) -> str:
+        ...
+
+
+class ElementBuilder(Protocol):
+    def __call__(
+        self,
+        child: Renderable | None = None,
+        _attrs: Mapping[str, SupportsStr | bool] | None = None,
+        **attributes: SupportsStr | bool,
+    ) -> Element:
+        ...
+
+
+class VoidElementBuilder(Protocol):
+    def __call__(
+        self,
+        _attrs: Mapping[str, SupportsStr | bool] | None = None,
+        **attributes: SupportsStr | bool,
+    ) -> Element:
+        ...
+
+
+Renderable: TypeAlias = SupportsStr | HTMLRenderable | list["Renderable"]
 
 
 @dataclass
 class Element:
     element_tag: str
     is_void: bool
-    child: Element | object = None
+    child: Renderable | None = None
     kwargs: dict[str, Any] = field(default_factory=dict)
 
     def _render_attributes(self, buffer: StringIO):
 
         attribute_kwarg: dict = self.kwargs.get(ATTR_KWARG, {})
-        if attribute_kwarg:
+
+        if ATTR_KWARG in self.kwargs:
             del self.kwargs[ATTR_KWARG]
 
         for attr, value in self.kwargs.items():
@@ -45,8 +90,8 @@ class Element:
     def _render_child(self, child: Any, buffer: StringIO):
         match child:
             case list(children):
-                for child in children:
-                    self._render_child(child, buffer)
+                siblings = Siblings(children)
+                siblings.render(buffer)
             case Element():
                 child.render(buffer)
             case int() | float() | str():
@@ -72,27 +117,72 @@ class Element:
         return buffer.getvalue()
 
 
-def _dom_element(element_tag: str, void=False) -> Callable[..., Element]:
-    def element(child: object = None, **kwargs) -> Element:
-        return Element(element_tag, void, child, kwargs)
+@dataclass
+class Siblings:
+    elements: list[Renderable] = field(default_factory=list)
 
-    return element
+    def render(self, buffer: StringIO | None = None) -> str:
+        if buffer is None:
+            buffer = StringIO()
+
+        for node in self.elements:
+            match node:
+                case list(children):
+                    siblings = Siblings(children)
+                    siblings.render(buffer)
+                case Element():
+                    node.render(buffer)
+                case int() | float() | str() | None:
+                    buffer.write(str(node))
+                case _:
+                    raise NotImplemented("Invalid node child type")
+
+        return buffer.getvalue()
+
+
+def _dom_element(element_tag: str) -> ElementBuilder:
+    def element_builder(
+        child: Renderable | None = None, _attrs: Mapping | None = None, **kwargs
+    ) -> Element:
+        return Element(
+            element_tag,
+            False,
+            child,
+            {ATTR_KWARG: _attrs if _attrs is not None else {}, **kwargs},
+        )
+
+    return element_builder
+
+
+def _void_dom_element(element_tag: str) -> VoidElementBuilder:
+    def void_element_builder(
+        _attrs: Mapping | None = None, **kwargs
+    ) -> Element:
+        return Element(
+            element_tag,
+            True,
+            None,
+            {ATTR_KWARG: _attrs if _attrs is not None else {}, **kwargs},
+        )
+
+    return void_element_builder
 
 
 # Particle builders for void html elements
-area = _dom_element("area", void=True)
-base = _dom_element("base", void=True)
-br = _dom_element("br", void=True)
-col = _dom_element("col", void=True)
-embed = _dom_element("embed", void=True)
-hr = _dom_element("hr", void=True)
-img = _dom_element("img", void=True)
-Input = _dom_element("input", void=True)
-link = _dom_element("link", void=True)
-meta = _dom_element("meta", void=True)
-source = _dom_element("source", void=True)
-track = _dom_element("track", void=True)
-wbr = _dom_element("wbr", void=True)
+area = _void_dom_element("area")
+base = _void_dom_element("base")
+br = _void_dom_element("br")
+col = _void_dom_element("col")
+embed = _void_dom_element("embed")
+hr = _void_dom_element("hr")
+img = _void_dom_element("img")
+Input = _void_dom_element("input")
+link = _void_dom_element("link")
+meta = _void_dom_element("meta")
+source = _void_dom_element("source")
+track = _void_dom_element("track")
+wbr = _void_dom_element("wbr")
+
 
 # Particle builders for normal html elements
 div = _dom_element("div")
