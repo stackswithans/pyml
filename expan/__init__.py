@@ -8,8 +8,6 @@ from expan.importer import MacroImporter
 def _import_hook(path: str) -> Any:
     if not os.path.isdir(path):
         raise ImportError()
-    decoded_path = str(path)
-    print(decoded_path)
     return MacroImporter(path)
 
 
