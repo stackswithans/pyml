@@ -1,0 +1,19 @@
+import sys
+import os
+from typing import Callable, TypeVar, ParamSpec, Any
+from importlib.abc import PathEntryFinder, Loader
+from importlib.machinery import FileFinder, SourceFileLoader
+from dataclasses import dataclass
+from io import StringIO
+from pyml.elements import *
+import time as ptime
+
+def pyml(source):
+    return "print('{source}')"
+
+def pymain():
+    return pyml! (
+        <div>Hello marco</div>
+    )
+
+pymain()

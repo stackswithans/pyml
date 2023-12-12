@@ -1,16 +1,12 @@
 from __future__ import annotations
 from io import StringIO
 from typing import (
-    Callable,
-    TypeVar,
-    ParamSpec,
     Any,
     TypeAlias,
     Mapping,
     Protocol,
     runtime_checkable,
 )
-import time as ptime
 from dataclasses import dataclass, field
 from abc import abstractmethod
 
@@ -53,7 +49,7 @@ Renderable: TypeAlias = SupportsStr | HTMLRenderable | list["Renderable"]
 
 
 @dataclass
-class Element:
+class Element(HTMLRenderable):
     element_tag: str
     is_void: bool
     child: Renderable | None = None
@@ -118,7 +114,7 @@ class Element:
 
 
 @dataclass
-class Siblings:
+class Siblings(HTMLRenderable):
     elements: list[Renderable] = field(default_factory=list)
 
     def render(self, buffer: StringIO | None = None) -> str:
@@ -132,8 +128,10 @@ class Siblings:
                     siblings.render(buffer)
                 case Element():
                     node.render(buffer)
-                case int() | float() | str() | None:
+                case int() | float() | str():
                     buffer.write(str(node))
+                case None:
+                    continue
                 case _:
                     raise NotImplemented("Invalid node child type")
 

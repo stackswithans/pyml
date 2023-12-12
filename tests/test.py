@@ -1,6 +1,7 @@
 from pyml.elements import *
 import pytest
 import time
+from pyml.macros import macros, pyml  # type: ignore
 from lxml import etree
 
 
@@ -81,3 +82,7 @@ def test_elements_render_correctly(test_elements_page: str):
         etree.tostring(etree.HTML(page), pretty_print=True)
         == test_elements_page
     )
+
+
+def test_macro():
+    pyml[Document(root=html())]
