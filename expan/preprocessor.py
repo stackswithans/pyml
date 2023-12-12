@@ -4,6 +4,7 @@ from typing import Any, cast
 from dataclasses import dataclass
 from pyparsing import ParserElement, alphas, alphanums
 import pyparsing as pp
+import builtins
 
 
 @dataclass
@@ -66,7 +67,7 @@ class PyPreprocessor:
 
     def preprocess_src(self, src: str) -> str:
         processed_src = "".join(self.parser.parse_string(src))
-        im_module_dict = dict(__builtins__.__dict__)
+        im_module_dict = dict(builtins.__dict__)
         im_module_dict.update({key: "" for key in self.macro_calls})
         exec(processed_src, im_module_dict)
         return self.expand_macros(processed_src, im_module_dict)
