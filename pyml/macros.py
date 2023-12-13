@@ -23,7 +23,6 @@ attribute_list = pp.DelimitedList(
     attribute, delim=",", allow_trailing_delim=True
 )
 
-
 element = pp.Forward()
 child = expr ^ element
 children = pp.DelimitedList(child, delim=",")
@@ -65,8 +64,16 @@ def parse_expr(loc: int, tokens: ParseResults) -> Node:
         return pymlast.Name(tok)
 
 
+@pysx_parser.set_parse_action
+def parse_pysx(loc: int, tokens: ParseResults) -> Node:
+    if len(tokens) == 1:
+        return cast(Node, tokens[0])
+    else:
+        return pymlast.Siblings(list(tokens))
+
+
 @expan.expr_macro
-def pyml(arg: str) -> str:
+def pysx(arg: str) -> str:
     result = pysx_parser.parse_string(arg, True)
 
     pprint.pprint(result)

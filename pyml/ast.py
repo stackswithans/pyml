@@ -16,6 +16,11 @@ class Node:
 
 
 @dataclass
+class Siblings(Node):
+    children: list[Element]
+
+
+@dataclass
 class Expr(Node):
     pass
 

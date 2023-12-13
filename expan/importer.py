@@ -28,7 +28,7 @@ class MacroImporter(PathEntryFinder):
     def __init__(self, path: str):
         self.search_path = path
         self.py_finder = FileFinder(path, (SourceFileLoader, [".py"]))
-        self.macro_finder = FileFinder(path, (MacroLoader, [".pym"]))
+        self.macro_finder = FileFinder(path, (MacroLoader, [".pyxp"]))
 
     def find_spec(self, full_name: str, target=None):
         # .py take precedence over .pym

@@ -1,7 +1,7 @@
 import expan
 from pyml.elements import *
 import time as ptime
-import test1  # type: ignore
+import test_macros  # type: ignore
 
 
 def pymain():
@@ -21,5 +21,5 @@ def pymain():
     print("Opening file time: ", end - start)
 
 
-print(test1.pymain())
+print(test_macros.pymain())
 # pymain()
