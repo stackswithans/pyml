@@ -1,17 +1,22 @@
+from pyml.macros import pyml
 import sys
 import os
 from typing import Callable, TypeVar, ParamSpec, Any
 from dataclasses import dataclass
 from io import StringIO
-import time as ptime
 
 def stringify(source: str) -> str:
     formatted_src = source.replace('\n', '\\n')
     return f"'{formatted_src}'"
 
 def pymain():
-    return stringify! (
-        <div>Hello marco</div>
-    )
-
-pymain()
+    print(pyml! (
+        div {
+            attr-1: "red", 
+            attr-2: "blue", 
+            "Hello marco",
+            div {"Taki"}
+        }, 
+        div { "teste1" }, 
+        div { "teste2" }
+    ))

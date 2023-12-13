@@ -30,8 +30,6 @@ class PyPreprocessor:
         return [call_key]
 
     def build_parser(self) -> pp.ParserElement:
-        ParserElement.set_default_whitespace_chars(" ")
-
         identifier = pp.Word(alphas + "_", alphanums + "_")
         macro_identifier = pp.Combine(
             identifier + pp.ZeroOrMore("." + identifier) + "!"
@@ -49,6 +47,7 @@ class PyPreprocessor:
             + pp.ZeroOrMore(pp.SkipTo(macro_expr) + macro_expr)
             + pp.SkipTo(pp.StringEnd())
         )
+        pym_src.set_whitespace_chars(" ")
 
         return pym_src
 
