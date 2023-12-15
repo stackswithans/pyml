@@ -9,6 +9,7 @@ from typing import (
 )
 from dataclasses import dataclass, field
 from abc import abstractmethod
+from enum import Enum
 
 
 ATTR_KWARG = "_attrs"
@@ -17,6 +18,11 @@ ATTR_KWARG = "_attrs"
 class HTMLRenderable(Protocol):
     def render(self, buffer: StringIO | None) -> str:
         ...
+
+
+class ElementBuilderType(Enum):
+    Normal = 0
+    Void = 0
 
 
 @runtime_checkable
@@ -138,6 +144,9 @@ class Siblings(HTMLRenderable):
         return buffer.getvalue()
 
 
+_builders: dict[str, ElementBuilderType] = {}
+
+
 def _dom_element(element_tag: str) -> ElementBuilder:
     def element_builder(
         child: Renderable | None = None, _attrs: Mapping | None = None, **kwargs
@@ -149,6 +158,7 @@ def _dom_element(element_tag: str) -> ElementBuilder:
             {ATTR_KWARG: _attrs if _attrs is not None else {}, **kwargs},
         )
 
+    _builders[element_tag] = ElementBuilderType.Normal
     return element_builder
 
 
@@ -163,7 +173,12 @@ def _void_dom_element(element_tag: str) -> VoidElementBuilder:
             {ATTR_KWARG: _attrs if _attrs is not None else {}, **kwargs},
         )
 
+    _builders[element_tag] = ElementBuilderType.Void
     return void_element_builder
+
+
+def get_builder(element: str) -> ElementBuilderType | None:
+    return _builders.get(element)
 
 
 # Particle builders for void html elements

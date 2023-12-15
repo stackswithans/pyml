@@ -34,7 +34,7 @@ class Attribute(Node):
 @dataclass
 class Literal(Expr):
     lit_type: LiteralType
-    value: str | int
+    value: str | int | float
 
 
 @dataclass
