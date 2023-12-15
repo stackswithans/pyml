@@ -45,7 +45,7 @@ class Node:
 
 @dataclass
 class Siblings(Node):
-    children: list[Element]
+    children: list[Node]
 
 
 @dataclass
@@ -81,4 +81,4 @@ class Name(Node, Expr):
 class Element(Node):
     name: str
     attrs: list[Attribute]
-    children: list[Expr | Element]
+    children: Siblings

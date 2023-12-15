@@ -15,7 +15,7 @@ def pymain():
             attr-1: "red", 
             attr-2: "blue", 
             attr-3: 0, 
-            "Hello marco",
+            'Hello " marco',
             div {"Taki"}
         }, 
         div { "teste1" }, 

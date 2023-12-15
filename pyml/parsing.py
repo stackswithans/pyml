@@ -37,7 +37,7 @@ def parse_element(loc: int, tokens: ParseResults) -> Node:
     return Element(
         str(tokens["name"]),
         list(cast(Any, tokens.get("attrs", []))),
-        list(cast(Any, tokens.get("children", []))),
+        pymlast.Siblings(list(cast(Any, tokens.get("children", [])))),
     )
 
 
@@ -53,7 +53,9 @@ def parse_expr(loc: int, tokens: ParseResults) -> Node:
     if isinstance(tok, int) or isinstance(tok, float):
         return pymlast.Literal(pymlast.LiteralType.Number, tok)
     elif str(tok).startswith("'") or str(tok).startswith('"'):
-        return pymlast.Literal(pymlast.LiteralType.String, tok)
+        return pymlast.Literal(
+            pymlast.LiteralType.String, tok[1 : len(tok) - 1]
+        )
     else:
         return pymlast.Name(tok)
 

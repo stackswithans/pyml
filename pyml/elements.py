@@ -22,7 +22,7 @@ class HTMLRenderable(Protocol):
 
 class ElementBuilderType(Enum):
     Normal = 0
-    Void = 0
+    Void = 1
 
 
 @runtime_checkable
