@@ -25,7 +25,9 @@ class PyPreprocessor:
 
     def parse_macro_expr(self, loc: int, tokens: pp.ParseResults):
         macro_fn = str(tokens["fn"]).replace("!", "")
-        call_key = f"{self.CALL_SITE_PREFIX}{len(self.macro_calls)}"
+        whitespace = "".join(tokens["whitespace"])
+
+        call_key = f"{self.CALL_SITE_PREFIX}{len(self.macro_calls)}{whitespace}"
         self.macro_calls[call_key] = MacroCall(macro_fn, str(tokens["arg"]))
         return [call_key]
 
@@ -34,17 +36,18 @@ class PyPreprocessor:
         macro_identifier = pp.Combine(
             identifier + pp.ZeroOrMore("." + identifier) + "!"
         )
+
         macro_expr = (
             macro_identifier.set_results_name("fn")
             + "("
-            + pp.SkipTo(")").set_results_name("arg")
-            + ")"
+            + pp.SkipTo(")", include=True).set_results_name("arg")
+            + pp.White()[...].set_results_name("whitespace").leave_whitespace()
         )
         macro_expr.set_parse_action(self.parse_macro_expr)
 
         pym_src = (
             pp.StringStart()
-            + pp.ZeroOrMore(pp.SkipTo(macro_expr) + macro_expr)
+            + pp.ZeroOrMore(pp.SkipTo(macro_expr, include=True))
             + pp.SkipTo(pp.StringEnd())
         )
         pym_src.set_whitespace_chars(" ")
@@ -65,7 +68,10 @@ class PyPreprocessor:
         return expanded_src
 
     def preprocess_src(self, src: str) -> str:
+        src_parts = self.parser.parse_string(src)
+        print(src_parts)
         processed_src = "".join(self.parser.parse_string(src))
+        print(processed_src)
         im_module_dict = dict(builtins.__dict__)
         im_module_dict.update({key: "" for key in self.macro_calls})
         exec(processed_src, im_module_dict)

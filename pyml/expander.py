@@ -63,12 +63,18 @@ class Expander(pymlast.Visitor):
         self.buffer.write(f"</{node.name}>")
 
     def visit_attribute(self, node: pymlast.Attribute):
-        raw_val = node.value.eval()
-        if isinstance(raw_val, str):
-            value = self._escape_str(node.value.eval())
-        else:
-            value = f"{raw_val}"
-        self.buffer.write(f" {node.attr}='{value}'")
+        match node.value:
+            case pymlast.Name():
+                self.buffer.write(f" {node.attr}='{node.value.eval()}'")
+            case pymlast.Expr():
+                raw_val = node.value.eval()
+                if isinstance(raw_val, str):
+                    value = self._escape_str(node.value.eval())
+                else:
+                    value = f"{raw_val}"
+                self.buffer.write(f" {node.attr}='{value}'")
+            case _:
+                raise NotImplementedError("New node expression type")
 
     def visit_literal(self, node: pymlast.Literal):
         raw_val = node.eval()
@@ -78,7 +84,7 @@ class Expander(pymlast.Visitor):
             self.buffer.write(f" {raw_val} ")
 
     def visit_name(self, node: pymlast.Name):
-        self.buffer.write(f" {node.eval()} ")
+        self.buffer.write(f" {{{node.ident}}} ")
 
     def expand(self) -> str:
         self.buffer.write(f"f{Expander.PY_STR_DELIM}")

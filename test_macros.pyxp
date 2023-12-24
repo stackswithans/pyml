@@ -1,4 +1,5 @@
 from pyml.macros import pysx
+from pyml.decorators import component
 import sys
 import os
 from typing import Callable, TypeVar, ParamSpec, Any
@@ -9,16 +10,40 @@ def stringify(source: str) -> str:
     formatted_src = source.replace('\n', '\\n')
     return f"'{formatted_src}'"
 
-def pymain():
-    print(pysx! (
-        div {
-            attr-1: "red", 
-            attr-2: "blue", 
-            attr-3: 0, 
-            'Hello " marco',
-            div {"Taki"}
+@component
+def Scaffold(props: Props) -> Element:
+    children = props.children 
+    return pysx!(
+        "<!DOCTYPE html>", 
+        head {
+            meta {
+                charset: "utf-8"
+            }, 
+            meta {
+                name: "viewport", 
+                content: "width=device-width", 
+                initial-scale: 1 
+            }
         }, 
-        div { "teste1" }, 
-        div { "teste2" }, 
-        ol {}
+        body{  
+            children
+        }
+    )
+
+def pymain():
+    value = "Hello marco"
+    attr_2 = "blue"
+    print(pysx! (
+        Scaffold{
+            div {
+                attr-1: "red", 
+                attr-2: attr_2, 
+                attr-3: 0, 
+                value, 
+                div {"Taki"}
+            }, 
+            div { "teste1" }, 
+            div { "teste2" }, 
+            ol {}
+        }
     ))

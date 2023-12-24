@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Protocol, Any
+from typing import Protocol, Any, runtime_checkable
 from dataclasses import dataclass
 from enum import Enum
 import pprint
@@ -48,6 +48,7 @@ class Siblings(Node):
     children: list[Node]
 
 
+@runtime_checkable
 @dataclass
 class Expr(Protocol):
     def eval(self) -> Any:
@@ -74,7 +75,7 @@ class Name(Node, Expr):
     ident: str
 
     def eval(self) -> Any:
-        return self.ident
+        return f"{{{self.ident}}}"
 
 
 @dataclass

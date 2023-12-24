@@ -17,7 +17,6 @@ class MacroLoader(SourceFileLoader):
     def exec_module(self, module: ModuleType):
         src = self.get_data(self.path)
         src = self.preproc.preprocess_src(src.decode())
-        print(src)
         try:
             exec(src, module.__dict__)
         except:
