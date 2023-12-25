@@ -1,5 +1,5 @@
 from pyml.macros import pysx
-from pyml.decorators import component
+from pyml.component import component, Props
 import sys
 import os
 from typing import Callable, TypeVar, ParamSpec, Any
@@ -11,7 +11,7 @@ def stringify(source: str) -> str:
     return f"'{formatted_src}'"
 
 @component
-def Scaffold(props: Props) -> Element:
+def Scaffold(props: Props):
     children = props.children 
     return pysx!(
         "<!DOCTYPE html>", 

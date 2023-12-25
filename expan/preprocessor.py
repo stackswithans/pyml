@@ -27,9 +27,9 @@ class PyPreprocessor:
         macro_fn = str(tokens["fn"]).replace("!", "")
         whitespace = "".join(tokens["whitespace"])
 
-        call_key = f"{self.CALL_SITE_PREFIX}{len(self.macro_calls)}{whitespace}"
+        call_key = f"{self.CALL_SITE_PREFIX}{len(self.macro_calls)}"
         self.macro_calls[call_key] = MacroCall(macro_fn, str(tokens["arg"]))
-        return [call_key]
+        return [f"{call_key}{whitespace}"]
 
     def build_parser(self) -> pp.ParserElement:
         identifier = pp.Word(alphas + "_", alphanums + "_")
@@ -64,14 +64,12 @@ class PyPreprocessor:
                 raise e
 
             expand_result: str = macro_fn(macro_call.arg)
+            print(key)
             expanded_src = expanded_src.replace(key, expand_result)
         return expanded_src
 
     def preprocess_src(self, src: str) -> str:
-        src_parts = self.parser.parse_string(src)
-        print(src_parts)
         processed_src = "".join(self.parser.parse_string(src))
-        print(processed_src)
         im_module_dict = dict(builtins.__dict__)
         im_module_dict.update({key: "" for key in self.macro_calls})
         exec(processed_src, im_module_dict)

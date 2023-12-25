@@ -17,6 +17,9 @@ class Visitor(Protocol):
     def visit_element(self, node: Element):
         ...
 
+    def visit_component(self, node: Component):
+        ...
+
     def visit_attribute(self, node: Attribute):
         ...
 
@@ -46,6 +49,9 @@ class Node:
 @dataclass
 class Siblings(Node):
     children: list[Node]
+
+    def is_empty(self) -> bool:
+        return len(self.children) == 0
 
 
 @runtime_checkable
@@ -83,3 +89,9 @@ class Element(Node):
     name: str
     attrs: list[Attribute]
     children: Siblings
+
+
+@dataclass
+class Component(Node):
+    name: str
+    props: dict[str, Expr]

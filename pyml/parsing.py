@@ -4,7 +4,7 @@ from typing import cast, Any
 from pyparsing import alphas, alphanums, quoted_string, common
 from pyparsing.results import ParseResults
 import pyml.ast as pymlast
-from pyml.ast import Element, Attribute, Node
+from pyml.ast import Element, Attribute, Node, Component
 
 
 LBRACE, RBRACE = map(pp.Literal, "{}")
@@ -28,22 +28,34 @@ element <<= (
     + pp.Opt(children)("children")
     + RBRACE
 )
-element_list = pp.DelimitedList(element, delim=",")
+element_list = pp.DelimitedList(element ^ expr, delim=",")
 pysx_parser = pp.StringStart() + element_list + pp.StringEnd()
 
 
+# Component name must start with uppercase
 @element.set_parse_action
 def parse_element(loc: int, tokens: ParseResults) -> Node:
-    return Element(
-        str(tokens["name"]),
-        list(cast(Any, tokens.get("attrs", []))),
-        pymlast.Siblings(list(cast(Any, tokens.get("children", [])))),
-    )
+    ident: str = str(tokens["name"])
+    if ident[0].isupper():
+        props = {}
+        attrs = list(cast(Any, tokens.get("attrs", [])))
+        for attr in attrs:
+            props[attr.attr] = attr.value
+
+        props["children"] = pymlast.Siblings(
+            list(cast(Any, tokens.get("children", [])))
+        )
+        return Component(ident, props)
+    else:
+        return Element(
+            ident,
+            list(cast(Any, tokens.get("attrs", []))),
+            pymlast.Siblings(list(cast(Any, tokens.get("children", [])))),
+        )
 
 
 @attribute.set_parse_action
 def parse_attribute(loc: int, tokens: ParseResults) -> Node:
-    print("Attribute parse: ", tokens)
     return Attribute(str(tokens["attr"]), cast(pymlast.Expr, tokens[2]))
 
 

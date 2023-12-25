@@ -11,7 +11,7 @@ from pyml.expander import Expander
 def pysx(arg: str) -> str:
     # TODO: Handle syntax errors
     root: Node = cast(Node, pymlparsing.pysx_parser.parse_string(arg, True)[0])
-    pprint.pprint(root)
+    # pprint.pprint(root)
     buffer = StringIO()
     expander = Expander(root, buffer)
     py_str = expander.expand()
