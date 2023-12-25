@@ -64,7 +64,6 @@ class PyPreprocessor:
                 raise e
 
             expand_result: str = macro_fn(macro_call.arg)
-            print(key)
             expanded_src = expanded_src.replace(key, expand_result)
         return expanded_src
 

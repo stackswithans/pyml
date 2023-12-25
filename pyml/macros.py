@@ -15,6 +15,6 @@ def pysx(arg: str) -> str:
     buffer = StringIO()
     expander = Expander(root, buffer)
     py_str = expander.expand()
-    print(py_str)
+    # print(py_str)
     buffer.close()
     return py_str
