@@ -29,6 +29,9 @@ class Visitor(Protocol):
     def visit_name(self, node: Name):
         ...
 
+    def escape_str(self, string: str) -> str:
+        ...
+
 
 @dataclass
 class Node:
@@ -57,7 +60,7 @@ class Siblings(Node):
 @runtime_checkable
 @dataclass
 class Expr(Protocol):
-    def eval(self) -> Any:
+    def eval(self, visitor: Visitor, ctx: Node) -> Any:
         ...
 
 
@@ -72,16 +75,46 @@ class Literal(Node, Expr):
     lit_type: LiteralType
     value: str | int | float
 
-    def eval(self) -> Any:
-        return self.value
+    def eval(self, visitor: Visitor, ctx: Node) -> Any:
+        match ctx:
+            case Attribute():
+                if self.lit_type == LiteralType.String:
+                    safe_str = visitor.escape_str(str(self.value))
+                    return f"'{safe_str}'"
+                else:
+                    return f"'{self.value}'"
+            case Literal():
+                if self.lit_type == LiteralType.String:
+                    safe_str = visitor.escape_str(str(self.value))
+                    return f"{safe_str}"
+                else:
+                    return f"{self.value}"
+            case Component():
+                return (
+                    f'"{visitor.escape_str(self.value)}"'
+                    if self.lit_type == LiteralType.String
+                    else f"{self.value}"
+                )
+            case _:
+                raise NotImplementedError(
+                    f"Unhandled eval node type: {ctx.__class__.__name__}"
+                )
 
 
 @dataclass
 class Name(Node, Expr):
     ident: str
 
-    def eval(self) -> Any:
-        return f"{{{self.ident}}}"
+    def eval(self, visitor: Visitor, ctx: Node) -> Any:
+        match ctx:
+            case Attribute():
+                return f"'{{{self.ident}}}'"
+            case Component():
+                return self.ident
+            case _:
+                raise NotImplementedError(
+                    f"Unhandled eval node type: {ctx.__class__.__name__}"
+                )
 
 
 @dataclass

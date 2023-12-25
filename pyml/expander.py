@@ -33,15 +33,18 @@ class Expander(pymlast.Visitor):
                 return False
         return True
 
-    def _escape_str(self, string: str) -> str:
+    def escape_str(self, string: str) -> str:
+        if not self._is_safe_str(string):
+            return self._get_format_idx(f'"{string}"')
+
+        # TODO: Escape HTML in strings
         buf = StringIO()
         for i, char in enumerate(string):
             prev_char = string[i - 1] if i > 0 else char
-
             if char == Expander.PY_STR_DELIM and prev_char != "\\":
                 buf.write("\\")
-
             buf.write(char)
+
         val = buf.getvalue()
         buf.close()
         return val
@@ -81,27 +84,18 @@ class Expander(pymlast.Visitor):
         del node.props["children"]
         # TODO: handle props that aren't valid python identifiers
         for i, (prop, value) in enumerate(node.props.items()):
-            match value:
-                case pymlast.Name():
-                    buffer.write(f"{prop}={value.ident}")
-                case pymlast.Literal():
-                    raw_val = value.eval()
-                    if isinstance(raw_val, str):
-                        value = self._escape_str(raw_val)
-                        buffer.write(f'{prop}="{value}"')
-                    else:
-                        buffer.write(f"{prop}={raw_val}")
-                case _:
-                    raise NotImplementedError("New node expression type")
+            value = cast(pymlast.Expr, value)
+            val = value.eval(self, node)
+            buffer.write(f"{prop}={val}")
             if i != len(node.props) - 1:
                 buffer.write(", ")
 
         if not children.is_empty():
             child_buffer = StringIO()
             expander = Expander(children, child_buffer)
-            child_str = expander.expand()
+            rendered_child = expander.expand()
             buffer.write(", ")
-            buffer.write(f"children={child_str}")
+            buffer.write(f"children={rendered_child}")
 
         buffer.write(f")")
         format_label = self._get_format_idx(buffer.getvalue())
@@ -115,32 +109,15 @@ class Expander(pymlast.Visitor):
         return f"{{{{{format_label}}}}}"
 
     def visit_attribute(self, node: pymlast.Attribute):
-        match node.value:
-            case pymlast.Name():
-                self.buffer.write(f" {node.attr}='{node.value.eval()}'")
-            case pymlast.Expr():
-                raw_val = node.value.eval()
-                if isinstance(raw_val, str):
-                    value = self._escape_str(node.value.eval())
-                else:
-                    value = f"{raw_val}"
-                self.buffer.write(f" {node.attr}='{value}'")
-            case _:
-                raise NotImplementedError("New node expression type")
+        val = node.value.eval(self, node)
+        self.buffer.write(f" {node.attr}={val}")
 
     def visit_literal(self, node: pymlast.Literal):
-        raw_val = node.eval()
-        if isinstance(raw_val, str):
-            if self._is_safe_str(raw_val):
-                self.buffer.write(f"{self._escape_str(raw_val)}")
-            else:
-                format_label = self._get_format_idx(f'"{raw_val}"')
-                self.buffer.write(format_label)
-        else:
-            self.buffer.write(f"{raw_val}")
+        val = node.eval(self, node)
+        self.buffer.write(f"{val}")
 
     def visit_name(self, node: pymlast.Name):
-        self.buffer.write(f" {{{node.ident}}} ")
+        self.buffer.write(f"{{{node.ident}}}")
 
     def expand(self) -> str:
         self.buffer.write(f"f{Expander.PY_STR_DELIM}")
