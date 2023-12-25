@@ -15,7 +15,10 @@ def expand_src(src_path: str):
     return preproc.preprocess_src(src)
 
 
-def main():
+def main(argv: list[str] | None = None):
+    if not argv:
+        argv = sys.argv[1:]
+
     parser = argparse.ArgumentParser("expan.py")
     parser.add_argument(
         "src",
@@ -26,7 +29,7 @@ def main():
         "--outfile",
         help="Name of the output file containing the expanded source. If not provided, expansion result is printed to stdout.",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(args=argv)
 
     if not path.exists(args.src):
         print(f"The path {args.src} does not exist.", file=sys.stderr)

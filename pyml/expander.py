@@ -26,6 +26,13 @@ class Expander(pymlast.Visitor):
     def _ascend(self):
         self.depth -= 1
 
+    def _is_safe_str(self, string: str) -> bool:
+        unsafe_char = ("{", "}")
+        for c in unsafe_char:
+            if c in string:
+                return False
+        return True
+
     def _escape_str(self, string: str) -> str:
         buf = StringIO()
         for i, char in enumerate(string):
@@ -33,6 +40,7 @@ class Expander(pymlast.Visitor):
 
             if char == Expander.PY_STR_DELIM and prev_char != "\\":
                 buf.write("\\")
+
             buf.write(char)
         val = buf.getvalue()
         buf.close()
@@ -96,14 +104,15 @@ class Expander(pymlast.Visitor):
             buffer.write(f"children={child_str}")
 
         buffer.write(f")")
-        format_label = self._get_format_label(buffer.getvalue())
-        self.buffer.write(f"{{{{{format_label}}}}}")
+        format_label = self._get_format_idx(buffer.getvalue())
+        self.buffer.write(format_label)
         buffer.close()
 
-    def _get_format_label(self, format_arg: str) -> int:
+    def _get_format_idx(self, format_arg: str) -> str:
         format_label = len(self.format_args)
         self.format_args.append(format_arg)
-        return format_label
+        # Escaped like this because of strings
+        return f"{{{{{format_label}}}}}"
 
     def visit_attribute(self, node: pymlast.Attribute):
         match node.value:
@@ -122,9 +131,13 @@ class Expander(pymlast.Visitor):
     def visit_literal(self, node: pymlast.Literal):
         raw_val = node.eval()
         if isinstance(raw_val, str):
-            self.buffer.write(f" {self._escape_str(raw_val)} ")
+            if self._is_safe_str(raw_val):
+                self.buffer.write(f"{self._escape_str(raw_val)}")
+            else:
+                format_label = self._get_format_idx(f'"{raw_val}"')
+                self.buffer.write(format_label)
         else:
-            self.buffer.write(f" {raw_val} ")
+            self.buffer.write(f"{raw_val}")
 
     def visit_name(self, node: pymlast.Name):
         self.buffer.write(f" {{{node.ident}}} ")

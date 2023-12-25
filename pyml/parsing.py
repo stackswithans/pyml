@@ -18,7 +18,7 @@ attribute_list = pp.DelimitedList(
     attribute, delim=",", allow_trailing_delim=True
 )
 element = pp.Forward()
-child = expr ^ element
+child = element | expr
 children = pp.DelimitedList(child, delim=",")
 
 element <<= (
@@ -28,9 +28,10 @@ element <<= (
     + pp.Opt(children)("children")
     + RBRACE
 )
-element_list = pp.DelimitedList(element ^ expr, delim=",")
-pysx_parser = pp.StringStart() + element_list + pp.StringEnd()
+# element_list = pp.DelimitedList(element | expr, delim=",")
+pysx_parser = pp.StringStart() + children + pp.StringEnd()
 
+# TODO: Add better error messages
 
 # Component name must start with uppercase
 @element.set_parse_action

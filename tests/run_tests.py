@@ -1,5 +1,9 @@
-import tests.test  # type: ignore
+import expan.main as expmain
 import pytest
 
 
-pytest.main(["tests/test.py"])
+# expand test file
+expmain.main(["tests/test_pysx.pyxp", "-o", "tests/test_pysx.py"])
+
+# run tests
+pytest.main(["tests/test_pysx.py"])

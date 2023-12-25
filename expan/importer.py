@@ -1,3 +1,4 @@
+import sys
 from types import ModuleType
 from importlib.abc import PathEntryFinder
 from importlib.machinery import FileFinder, SourceFileLoader
@@ -27,13 +28,18 @@ class MacroLoader(SourceFileLoader):
 class MacroImporter(PathEntryFinder):
     def __init__(self, path: str):
         self.search_path = path
-        self.py_finder = FileFinder(path, (SourceFileLoader, [".py"]))
         self.macro_finder = FileFinder(path, (MacroLoader, [".pyxp"]))
 
     def find_spec(self, full_name: str, target=None):
-        # .py take precedence over .pym
-        mod_spec = self.py_finder.find_spec(full_name, target)
-        if mod_spec:
-            return mod_spec
+        # .py takes precedence over .pym
+        # Ignore 'self' import hook
+        for hook in sys.path_hooks[1:]:
+            try:
+                finder = hook(self.search_path)
+            except ImportError:
+                continue
+            mod_spec = finder.find_spec(full_name, target)
+            if mod_spec:
+                return mod_spec
 
         return self.macro_finder.find_spec(full_name, target)
