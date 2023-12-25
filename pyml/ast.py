@@ -29,7 +29,7 @@ class Visitor(Protocol):
     def visit_name(self, node: Name):
         ...
 
-    def escape_str(self, string: str) -> str:
+    def escape_str(self, string: str, in_f_str: bool = True) -> str:
         ...
 
 
@@ -90,8 +90,9 @@ class Literal(Node, Expr):
                 else:
                     return f"{self.value}"
             case Component():
+                safe_str = visitor.escape_str(str(self.value), False)
                 return (
-                    f'"{visitor.escape_str(self.value)}"'
+                    f'"{visitor.escape_str(safe_str)}"'
                     if self.lit_type == LiteralType.String
                     else f"{self.value}"
                 )

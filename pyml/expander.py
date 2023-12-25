@@ -26,15 +26,15 @@ class Expander(pymlast.Visitor):
     def _ascend(self):
         self.depth -= 1
 
-    def _is_safe_str(self, string: str) -> bool:
+    def _is_safe_str_for_f_str(self, string: str) -> bool:
         unsafe_char = ("{", "}")
         for c in unsafe_char:
             if c in string:
                 return False
         return True
 
-    def escape_str(self, string: str) -> str:
-        if not self._is_safe_str(string):
+    def escape_str(self, string: str, in_f_str: bool = True) -> str:
+        if not self._is_safe_str_for_f_str(string) and in_f_str:
             return self._get_format_idx(f'"{string}"')
 
         # TODO: Escape HTML in strings
