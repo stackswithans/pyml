@@ -35,6 +35,7 @@ def pymain():
     attr_2 = "blue"
     print(pysx! (
         Scaffold{
+            testeProp: 1, 
             div {
                 attr-1: "red", 
                 attr-2: attr_2, 

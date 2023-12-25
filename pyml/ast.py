@@ -94,4 +94,4 @@ class Element(Node):
 @dataclass
 class Component(Node):
     name: str
-    props: dict[str, Expr]
+    props: dict[str, Node]

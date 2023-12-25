@@ -1,5 +1,5 @@
 from io import StringIO
-from typing import Callable, TypeVar, ClassVar
+from typing import Callable, TypeVar, ClassVar, cast
 from dataclasses import dataclass, field
 import pyml.ast as pymlast
 import pyml.elements as elements
@@ -67,8 +67,11 @@ class Expander(pymlast.Visitor):
     def visit_component(self, node: pymlast.Component):
         buffer = StringIO()
         buffer.write(f"{node.name}(")
-        children = node.props["children"]
+        children: pymlast.Siblings = cast(
+            pymlast.Siblings, node.props["children"]
+        )
         del node.props["children"]
+        # TODO: handle props that aren't valid python identifiers
         for i, (prop, value) in enumerate(node.props.items()):
             match value:
                 case pymlast.Name():
@@ -79,15 +82,22 @@ class Expander(pymlast.Visitor):
                         value = self._escape_str(raw_val)
                         buffer.write(f'{prop}="{value}"')
                     else:
-                        buffer.write(f"{prop}={value}")
+                        buffer.write(f"{prop}={raw_val}")
                 case _:
                     raise NotImplementedError("New node expression type")
             if i != len(node.props) - 1:
                 buffer.write(", ")
 
+        if not children.is_empty():
+            child_buffer = StringIO()
+            expander = Expander(children, child_buffer)
+            child_str = expander.expand()
+            buffer.write(", ")
+            buffer.write(f"children={child_str}")
+
         buffer.write(f")")
         format_label = self._get_format_label(buffer.getvalue())
-        self.buffer.write(f"{{{format_label}}}")
+        self.buffer.write(f"{{{{{format_label}}}}}")
         buffer.close()
 
     def _get_format_label(self, format_arg: str) -> int:
