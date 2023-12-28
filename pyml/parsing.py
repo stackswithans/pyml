@@ -11,15 +11,29 @@ LBRACE, RBRACE = map(pp.Literal, "{}")
 COLON = pp.Literal(":")
 
 identifier = pp.Word(alphas + "_", alphanums + "_-")
-# TODO: add python expressions
 expr = common.identifier ^ quoted_string ^ common.number
 attribute = identifier("attr") + ":" + expr
 attribute_list = pp.DelimitedList(
     attribute, delim=",", allow_trailing_delim=True
 )
 element = pp.Forward()
-child = element | expr
+for_expr = pp.Forward()
+
+# TODO: add python expressions
+py_expr = common.identifier
+
+child = element | for_expr | expr
 children = pp.DelimitedList(child, delim=",")
+
+for_expr <<= (
+    pp.Keyword("for")
+    + common.identifier("control_var")
+    + pp.Keyword("in")
+    + py_expr("iterable")
+    + LBRACE
+    + pp.Opt(children)("children")
+    + RBRACE
+)
 
 element <<= (
     identifier("name")
@@ -71,6 +85,12 @@ def parse_expr(loc: int, tokens: ParseResults) -> Node:
         )
     else:
         return pymlast.Name(tok)
+
+
+@for_expr.set_parse_action
+def parse_for_expr(loc: int, tokens: ParseResults) -> Node:
+    print("parsed for")
+    pass
 
 
 @pysx_parser.set_parse_action
