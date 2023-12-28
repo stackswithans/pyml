@@ -37,10 +37,13 @@ class PyPreprocessor:
             identifier + pp.ZeroOrMore("." + identifier) + "!"
         )
 
+        expr_with_parens = pp.Char("(") + ... + ")"
         macro_expr = (
             macro_identifier.set_results_name("fn")
             + "("
-            + pp.SkipTo(")", include=True).set_results_name("arg")
+            + pp.SkipTo(
+                ")", include=True, ignore=expr_with_parens
+            ).set_results_name("arg")
             + pp.White()[...].set_results_name("whitespace").leave_whitespace()
         )
         macro_expr.set_parse_action(self.parse_macro_expr)
@@ -71,5 +74,6 @@ class PyPreprocessor:
         processed_src = "".join(self.parser.parse_string(src))
         im_module_dict = dict(builtins.__dict__)
         im_module_dict.update({key: "" for key in self.macro_calls})
+        print(processed_src)
         exec(processed_src, im_module_dict)
         return self.expand_macros(processed_src, im_module_dict)

@@ -112,7 +112,7 @@ def test_for_expression():
             h1 {
                 "List content" 
             }, 
-            for word in word_list {
+            for i, a in enumerate(word_list) {
                 b {
                     word
                 }
