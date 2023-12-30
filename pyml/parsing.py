@@ -12,6 +12,7 @@ import ast
 LBRACE, RBRACE = map(pp.Literal, "{}")
 COLON = pp.Literal(":")
 
+py_ident = common.identifier
 identifier = pp.Word(alphas + "_", alphanums + "_-")
 expr = common.identifier ^ quoted_string ^ common.number
 attribute = identifier("attr") + ":" + expr
@@ -21,80 +22,7 @@ attribute_list = pp.DelimitedList(
 element = pp.Forward()
 for_expr = pp.Forward()
 
-# TODO: add python expressions
-py_ident = common.identifier
-py_expr = common.identifier
 
-#########Python grammar section################################
-"""
-t_lookahead = pp.Char('(') | '[' | '.'
-
-no_match_lookahead = pp.NotAny(t_lookahead)
-match_lookahead = pp.FollowedBy(t_lookahead)
-
-t_primary = pp.Forward()
-
-t_primary <<= t_primary + '.'+ py_ident + match_lookahead\
-    | t_primary + '[' +  slices +  ']' +  match_lookahead\
-    | t_primary +  genexp +  match_lookahead\
-    | t_primary + '(' +  pp.Opt(arguments) + ')' + match_lookahead\
-    | atom + match_lookahead
-
-single_target:
-    | single_subscript_attribute_target
-    | NAME 
-    | '(' single_target ')' 
-single_subscript_attribute_target:
-    | t_primary '.' NAME !t_lookahead 
-    | t_primary '[' slices ']' !t_lookahead 
-
-del_targets: ','.del_target+ [','] 
-del_target:
-    | t_primary '.' NAME !t_lookahead 
-    | t_primary '[' slices ']' !t_lookahead 
-    | del_t_atom
-del_t_atom:
-    | NAME 
-    | '(' del_target ')' 
-    | '(' [del_targets] ')' 
-    | '[' [del_targets] ']' 
-
-star_target = pp.Forward()
-
-target_with_star_atom = pp.Forward()
-
-star_targets_list_seq = pp.DelimitedList(
-    star_target, delim=",", allow_trailing_delim=True
-)
-
-star_targets_tuple_seq = (
-    star_target + pp.OneOrMore(pp.Group("," + star_target)) + pp.Opt(",")
-    | star_target + ","
-)
-
-star_atom = (
-    py_ident
-    | "(" + target_with_star_atom + ")"
-    | "(" + pp.Opt(star_targets_tuple_seq) + ")"
-    | "[" + pp.Opt(star_targets_list_seq) + "]"
-)
-
-target_with_star_atom <<= (
-    (t_primary + pp.Char(".") + no_match_lookahead)
-    | (t_primary + "[" + slices + "]" + no_match_lookahead)
-    | star_atom
-)
-
-
-star_target <<= (
-    pp.Char("*") + pp.Group(pp.NotAny("*") + star_target)
-) | target_with_star_atom
-
-star_targets = star_target + pp.NotAny(",") | pp.Opt(
-    pp.DelimitedList(star_target, delim=",")
-)
-"""
-###############################################################
 child = element | for_expr | expr
 
 children = pp.DelimitedList(child, delim=",")
@@ -166,9 +94,8 @@ def parse_for_expr(loc: int, tokens: ParseResults) -> Node:
     print("parsed for")
     target = tokens["target"]
     for_iter = tokens["iter"]
-
+    # Parse for expression as a for statement
     py_for = f"for {target} in {for_iter}:\n\tpass"
-
     try:
         ast.parse(py_for)
     except SyntaxError as e:
