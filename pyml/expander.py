@@ -91,9 +91,7 @@ class Expander(pymlast.Visitor):
                 buffer.write(", ")
 
         if not children.is_empty():
-            child_buffer = StringIO()
-            expander = Expander(children, child_buffer)
-            rendered_child = expander.expand()
+            rendered_child = self._expand_children(children)
             buffer.write(", ")
             buffer.write(f"children={rendered_child}")
 
@@ -101,6 +99,12 @@ class Expander(pymlast.Visitor):
         format_label = self._get_format_idx(buffer.getvalue())
         self.buffer.write(format_label)
         buffer.close()
+
+    def _expand_children(self, children: pymlast.Siblings) -> str:
+        child_buffer = StringIO()
+        expander = Expander(children, child_buffer)
+        rendered_child = expander.expand()
+        return rendered_child
 
     def _get_format_idx(self, format_arg: str) -> str:
         format_label = len(self.format_args)
@@ -118,6 +122,15 @@ class Expander(pymlast.Visitor):
 
     def visit_name(self, node: pymlast.Name):
         self.buffer.write(f"{{{node.ident}}}")
+
+    def visit_forexpr(self, node: pymlast.ForExpr):
+        if node.children.is_empty():
+            return
+        rendered_child = self._expand_children(node.children)
+        label = self._get_format_idx(
+            f"''.join(({rendered_child} for {node.target} in {node.for_iter}))"
+        )
+        self.buffer.write(f"{label}")
 
     def expand(self) -> str:
         self.buffer.write(f"f{Expander.PY_STR_DELIM}")

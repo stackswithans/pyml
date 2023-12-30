@@ -29,6 +29,9 @@ class Visitor(Protocol):
     def visit_name(self, node: Name):
         ...
 
+    def visit_forexpr(self, node: ForExpr):
+        ...
+
     def escape_str(self, string: str, in_f_str: bool = True) -> str:
         ...
 
@@ -122,6 +125,13 @@ class Name(Node, Expr):
 class Element(Node):
     name: str
     attrs: list[Attribute]
+    children: Siblings
+
+
+@dataclass
+class ForExpr(Node):
+    target: str
+    for_iter: str
     children: Siblings
 
 

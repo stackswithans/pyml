@@ -37,6 +37,7 @@ class PyPreprocessor:
             identifier + pp.ZeroOrMore("." + identifier) + "!"
         )
 
+        # TODO: Account for other false positive scenarios
         expr_with_parens = pp.Char("(") + ... + ")"
         macro_expr = (
             macro_identifier.set_results_name("fn")
@@ -74,6 +75,5 @@ class PyPreprocessor:
         processed_src = "".join(self.parser.parse_string(src))
         im_module_dict = dict(builtins.__dict__)
         im_module_dict.update({key: "" for key in self.macro_calls})
-        print(processed_src)
         exec(processed_src, im_module_dict)
         return self.expand_macros(processed_src, im_module_dict)

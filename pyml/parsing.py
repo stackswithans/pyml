@@ -91,18 +91,22 @@ def parse_expr(loc: int, tokens: ParseResults) -> Node:
 
 @for_expr.set_parse_action
 def parse_for_expr(loc: int, tokens: ParseResults) -> Node:
-    print("parsed for")
-    target = tokens["target"]
-    for_iter = tokens["iter"]
+    target = str(tokens["target"])
+    for_iter = str(tokens["iter"])
     # Parse for expression as a for statement
     py_for = f"for {target} in {for_iter}:\n\tpass"
     try:
         ast.parse(py_for)
-    except SyntaxError as e:
+    except SyntaxError:
         raise pp.ParseFatalException(
             f"Error while parsing for expression:\n{tb.format_exc()}"
         )
-    print(py_for)
+
+    return pymlast.ForExpr(
+        target,
+        for_iter,
+        pymlast.Siblings(list(cast(Any, tokens.get("children", [])))),
+    )
 
 
 @pysx_parser.set_parse_action
