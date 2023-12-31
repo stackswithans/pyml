@@ -141,3 +141,47 @@ def test_complex_for_expression():
     )
 
     assert str_to_etree(page) == str_to_etree(f"<div><h1>List content</h1><b>0</b><b>hello world</b><b>1</b><b>bye world</b></div>")
+
+def test_if_helper():
+    is_visible = True
+    page = pysx!(
+        div {
+            h1 {
+                "Testing if" 
+            }, 
+            if is_visible {
+                "hello world"
+            },
+            if not is_visible {
+                "bye world"
+            } else {
+                " still hello world"
+            }
+        }
+    )
+
+    assert str_to_etree(page) == str_to_etree(f"<div><h1>Testing if</h1>hello world still hello world</div>")
+
+def test_if_elif_helper():
+    lit_type = "string"
+    page = pysx!(
+        div {
+            h1 {
+                "Testing if" 
+            }, 
+            if lit_type == "list_lit" {
+                "[]"
+            }
+            elif lit_type == "float" {
+                "3.14"
+            }
+            elif lit_type == "string" {
+                "Hello world"
+            } else {
+                "unknown type"
+            }
+        }
+    )
+
+    assert str_to_etree(page) == str_to_etree(f"<div><h1>Testing if</h1>Hello world</div>")
+

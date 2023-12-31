@@ -75,6 +75,23 @@ class Expander(pymlast.Visitor):
 
         self.buffer.write(f"</{node.name}>")
 
+    def _expand_children(self, children: pymlast.Siblings) -> str:
+        child_buffer = StringIO()
+        expander = Expander(children, child_buffer)
+        rendered_child = expander.expand()
+        return rendered_child
+
+    def _expand_children_list(
+        self, children: list[pymlast.Siblings], results: list[str] | None = None
+    ) -> list[str]:
+        if not results:
+            results = []
+        for child in children:
+            child_buffer = StringIO()
+            expander = Expander(child, child_buffer)
+            results.append(expander.expand())
+        return results
+
     def visit_component(self, node: pymlast.Component):
         buffer = StringIO()
         buffer.write(f"{node.name}(")
@@ -100,12 +117,6 @@ class Expander(pymlast.Visitor):
         self.buffer.write(format_label)
         buffer.close()
 
-    def _expand_children(self, children: pymlast.Siblings) -> str:
-        child_buffer = StringIO()
-        expander = Expander(children, child_buffer)
-        rendered_child = expander.expand()
-        return rendered_child
-
     def _get_format_idx(self, format_arg: str) -> str:
         format_label = len(self.format_args)
         self.format_args.append(format_arg)
@@ -129,6 +140,46 @@ class Expander(pymlast.Visitor):
         rendered_child = self._expand_children(node.children)
         label = self._get_format_idx(
             f"''.join(({rendered_child} for {node.target} in {node.for_iter}))"
+        )
+        self.buffer.write(f"{label}")
+
+    def _render_condition_branch(
+        self, condition: str, block: pymlast.Siblings
+    ) -> str:
+        pass
+        if block.is_empty():
+            return f"({condition}, '')"
+        else:
+            rendered = self._expand_children(block)
+            return f"({condition}, {rendered})"
+
+    def visit_if(self, node: pymlast.If):
+        results = []
+        if_branch = node.if_branch
+
+        results.append(
+            self._render_condition_branch(
+                if_branch.condition, if_branch.children
+            )
+        )
+
+        for elif_branch in node.elif_branches:
+            results.append(
+                self._render_condition_branch(
+                    elif_branch.condition, elif_branch.children
+                )
+            )
+
+        if node.else_block:
+            results.append(
+                self._render_condition_branch("True", node.else_block)
+            )
+
+        results_list = f"({', '.join(results)},)"
+
+        # TODO: look for a better way to extract the list item
+        label = self._get_format_idx(
+            f"next(iter([render for cond, render in {results_list} if cond]), '')"
         )
         self.buffer.write(f"{label}")
 

@@ -21,21 +21,45 @@ attribute_list = pp.DelimitedList(
 )
 element = pp.Forward()
 for_expr = pp.Forward()
+if_stmt = pp.Forward()
+elif_stmt = pp.Forward()
+else_block = pp.Forward()
 
 
-child = element | for_expr | expr
+child = element ^ for_expr ^ expr ^ if_stmt
 
 children = pp.DelimitedList(child, delim=",")
 
 for_expr <<= (
     pp.Keyword("for")
-    + pp.SkipTo(pp.Keyword("in"))("target")
-    + pp.Keyword("in")
-    + pp.SkipTo(LBRACE)("iter")
-    + LBRACE
-    + pp.Opt(children)("children")
-    + RBRACE
+    - pp.SkipTo(pp.Keyword("in"))("target")
+    - pp.Keyword("in")
+    - pp.SkipTo(LBRACE)("iter")
+    - LBRACE
+    - pp.Opt(children)("children")
+    - RBRACE
 )
+
+conditional_branch = (
+    pp.SkipTo(LBRACE)("condition")
+    - LBRACE
+    - pp.Opt(children)("children")
+    - RBRACE
+)
+
+if_stmt <<= (
+    pp.Keyword("if")
+    - conditional_branch  # TODO: Report this bug:  Parse action not called when set_results_name is used with this parse element
+    - pp.ZeroOrMore(elif_stmt)("elif_branches")
+    - pp.Opt(else_block)("else_block")
+)
+
+elif_stmt <<= pp.Keyword("elif") - conditional_branch
+
+else_block <<= (
+    pp.Keyword("else") - LBRACE - pp.Opt(children)("children") - RBRACE
+)
+
 
 element <<= (
     identifier("name")
@@ -107,6 +131,41 @@ def parse_for_expr(loc: int, tokens: ParseResults) -> Node:
         for_iter,
         pymlast.Siblings(list(cast(Any, tokens.get("children", [])))),
     )
+
+
+@conditional_branch.set_parse_action
+def parse_conditional_branch(s: str, loc: int, tokens: ParseResults) -> Node:
+    condition = str(tokens["condition"])
+    try:
+        ast.parse("if {condition}:\n\tpass")
+    except SyntaxError:
+        raise pp.ParseFatalException(
+            f"Error while parsing if helper:\n{tb.format_exc()}"
+        )
+    return pymlast.CondBranch(
+        condition.strip(),
+        pymlast.Siblings(list(cast(Any, tokens.get("children", [])))),
+    )
+
+
+@else_block.set_parse_action
+def parse_else_block(loc: int, tokens: ParseResults) -> Node:
+    return pymlast.Siblings(list(cast(Any, tokens.get("children", []))))
+
+
+@elif_stmt.set_parse_action
+def parse_elif_stmt(loc: int, tokens: ParseResults) -> Node:
+    return cast(pymlast.CondBranch, tokens[1])
+
+
+@if_stmt.set_parse_action
+def parse_if_stmt(loc: int, tokens: ParseResults) -> Node:
+    if_branch = cast(pymlast.CondBranch, tokens[1])
+    elif_branches = cast(
+        tuple[pymlast.CondBranch], tuple(tokens["elif_branches"])
+    )
+    else_block = cast(pymlast.Siblings | None, tokens.get("else_block"))
+    return pymlast.If(if_branch, elif_branches, else_block)
 
 
 @pysx_parser.set_parse_action

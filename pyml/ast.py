@@ -32,6 +32,9 @@ class Visitor(Protocol):
     def visit_forexpr(self, node: ForExpr):
         ...
 
+    def visit_if(self, node: If):
+        ...
+
     def escape_str(self, string: str, in_f_str: bool = True) -> str:
         ...
 
@@ -133,6 +136,19 @@ class ForExpr(Node):
     target: str
     for_iter: str
     children: Siblings
+
+
+@dataclass
+class CondBranch(Node):
+    condition: str
+    children: Siblings
+
+
+@dataclass
+class If(Node):
+    if_branch: CondBranch
+    elif_branches: tuple[CondBranch]
+    else_block: Siblings | None
 
 
 @dataclass

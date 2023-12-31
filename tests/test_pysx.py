@@ -49,3 +49,16 @@ def test_complex_for_expression():
     page = f"<div><h1>List content</h1>{{0}}</div>".format(''.join((f"<b>{i}</b><b>{word}</b>" for i, word  in enumerate(word_list) )))
 
     assert str_to_etree(page) == str_to_etree(f"<div><h1>List content</h1><b>0</b><b>hello world</b><b>1</b><b>bye world</b></div>")
+
+def test_if_helper():
+    is_visible = True
+    page = f"<div><h1>Testing if</h1>{{0}}{{1}}</div>".format(next(iter([render for cond, render in ((is_visible, f"hello world"),) if cond]), ''), next(iter([render for cond, render in ((not is_visible, f"bye world"), (True, f" still hello world"),) if cond]), ''))
+
+    assert str_to_etree(page) == str_to_etree(f"<div><h1>Testing if</h1>hello world still hello world</div>")
+
+def test_if_elif_helper():
+    lit_type = "string"
+    page = f"<div><h1>Testing if</h1>{{0}}</div>".format(next(iter([render for cond, render in ((lit_type == "list_lit", f"[]"), (lit_type == "float", f"3.14"), (lit_type == "string", f"Hello world"), (True, f"unknown type"),) if cond]), ''))
+
+    assert str_to_etree(page) == str_to_etree(f"<div><h1>Testing if</h1>Hello world</div>")
+
