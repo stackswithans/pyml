@@ -153,6 +153,10 @@ class Expander(pymlast.Visitor):
             rendered = self._expand_children(block)
             return f"({condition}, {rendered})"
 
+    def visit_pyexpr(self, node: pymlast.PyExpr):
+        label = self._get_format_idx(node.py_expr)
+        self.buffer.write(f"{label}")
+
     def visit_if(self, node: pymlast.If):
         results = []
         if_branch = node.if_branch

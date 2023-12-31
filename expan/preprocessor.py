@@ -38,7 +38,7 @@ class PyPreprocessor:
         )
 
         # TODO: Account for other false positive scenarios
-        expr_with_parens = pp.Char("(") + ... + ")"
+        expr_with_parens = pp.Char("(") + ... + ")" | pp.Char("{") + ... + "}"
         macro_expr = (
             macro_identifier.set_results_name("fn")
             + "("

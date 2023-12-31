@@ -185,3 +185,13 @@ def test_if_elif_helper():
 
     assert str_to_etree(page) == str_to_etree(f"<div><h1>Testing if</h1>Hello world</div>")
 
+def test_py_helper():
+    lit_type = "string"
+    page = pysx!(
+        div {
+            h1 {
+               py { ",".join(str(i) for i in [1, 2, 3, 4]) }
+            }
+        }
+    )
+    assert str_to_etree(page) == str_to_etree(f"<div><h1>1,2,3,4</h1></div>")

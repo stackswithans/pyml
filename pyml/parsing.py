@@ -14,19 +14,22 @@ COLON = pp.Literal(":")
 
 py_ident = common.identifier
 identifier = pp.Word(alphas + "_", alphanums + "_-")
-expr = common.identifier ^ quoted_string ^ common.number
+
+py_helper = pp.Keyword("py") - LBRACE - pp.SkipTo(RBRACE)("py_expr") + RBRACE
+expr = py_helper | py_ident | quoted_string | common.number
+
 attribute = identifier("attr") + ":" + expr
 attribute_list = pp.DelimitedList(
     attribute, delim=",", allow_trailing_delim=True
 )
+
 element = pp.Forward()
 for_expr = pp.Forward()
 if_stmt = pp.Forward()
 elif_stmt = pp.Forward()
 else_block = pp.Forward()
 
-
-child = element ^ for_expr ^ expr ^ if_stmt
+child = expr ^ element ^ for_expr ^ if_stmt
 
 children = pp.DelimitedList(child, delim=",")
 
@@ -63,10 +66,10 @@ else_block <<= (
 
 element <<= (
     identifier("name")
-    + LBRACE
-    + pp.Opt(attribute_list)("attrs")
-    + pp.Opt(children)("children")
-    + RBRACE
+    - LBRACE
+    - pp.Opt(attribute_list)("attrs")
+    - pp.Opt(children)("children")
+    - RBRACE
 )
 # element_list = pp.DelimitedList(element | expr, delim=",")
 pysx_parser = pp.StringStart() + children + pp.StringEnd()
@@ -102,8 +105,10 @@ def parse_attribute(loc: int, tokens: ParseResults) -> Node:
 
 @expr.set_parse_action
 def parse_expr(loc: int, tokens: ParseResults) -> Node:
-    tok: str | int | float = cast(str | int | float, tokens[0])
-    if isinstance(tok, int) or isinstance(tok, float):
+    tok = cast(str | int | float | pymlast.PyExpr, tokens[0])
+    if isinstance(tok, pymlast.PyExpr):
+        return tok
+    elif isinstance(tok, int) or isinstance(tok, float):
         return pymlast.Literal(pymlast.LiteralType.Number, tok)
     elif str(tok).startswith("'") or str(tok).startswith('"'):
         return pymlast.Literal(
@@ -156,6 +161,30 @@ def parse_else_block(loc: int, tokens: ParseResults) -> Node:
 @elif_stmt.set_parse_action
 def parse_elif_stmt(loc: int, tokens: ParseResults) -> Node:
     return cast(pymlast.CondBranch, tokens[1])
+
+
+def _is_py_expr(node: ast.Module) -> bool:
+    stmts = node.body
+    if not stmts or len(stmts) == 0 or len(stmts) > 1:
+        return False
+
+    return isinstance(stmts[0], ast.Expr)
+
+
+@py_helper.set_parse_action
+def parse_py_helper(loc: int, tokens: ParseResults) -> Node:
+    py_expr = str(tokens["py_expr"])
+
+    try:
+        node = ast.parse(py_expr)
+        if not _is_py_expr(node):
+            raise SyntaxError
+    except SyntaxError:
+        raise pp.ParseFatalException(
+            f"Error while parsing if helper:\n{tb.format_exc()}"
+        )
+    print("returning py expr")
+    return pymlast.PyExpr(py_expr)
 
 
 @if_stmt.set_parse_action
