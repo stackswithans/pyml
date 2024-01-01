@@ -76,6 +76,7 @@ class Expr(Protocol):
         ...
 
 
+# TODO: Handle html in attribute values
 @dataclass
 class Attribute(Node):
     attr: str
@@ -87,6 +88,7 @@ class Literal(Node, Expr):
     lit_type: LiteralType
     value: str | int | float
 
+    # TODO: Escape HTML in string literals
     def eval(self, visitor: Visitor, ctx: Node) -> Any:
         match ctx:
             case Attribute():
@@ -174,6 +176,7 @@ class PyExpr(Node, Expr):
                 )
 
 
+# TODO: Handle HTML in props
 @dataclass
 class Component(Node):
     name: str
