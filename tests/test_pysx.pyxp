@@ -1,0 +1,209 @@
+import pytest
+import time
+from lxml import etree
+from pyml.macros import pysx
+
+from pyml.macros import pysx
+from pyml.component import component, Props
+import sys
+import os
+from typing import Callable, TypeVar, ParamSpec, Any
+from dataclasses import dataclass
+from io import StringIO
+
+@component
+def Scaffold(props: Props):
+    children = props.children 
+    return pysx!(
+        "<!DOCTYPE html>", 
+        html {
+            head {
+                meta {
+                    charset: "utf-8"
+                }, 
+                meta {
+                    name: "viewport", 
+                    content: "width=device-width", 
+                    initial-scale: 1
+                } 
+            }, 
+            body{  
+                children
+            }
+        }
+    )
+
+def str_to_etree(html: str) -> bytes: 
+    return etree.tostring(etree.HTML(html), pretty_print=True)
+
+@pytest.fixture
+def test_elements_page() -> bytes:
+    with open("tests/pages/test_elements.html", "r", encoding="utf8") as f:
+        return etree.tostring(etree.HTML(f.read()), pretty_print=True)
+
+
+def test_elements_render_correctly(test_elements_page: str):
+    page = pysx!(
+        "<!DOCTYPE html>",
+        html {
+            head{
+                meta {
+                    charset: "utf-8"
+                }, 
+                meta {
+                    name: "viewport", 
+                    content: "width=device-width, initial-scale=1.0", 
+                }, 
+                meta {
+                    name: "generator", 
+                    content: "Docutils 0.17.1: http://docutils.sourceforge.net/"
+                }, 
+                title{
+                    "builtins — Built-in objects &#8212; Python 3.10.13 documentation"
+                },
+                link{
+                    rel: "stylesheet",
+                    href: "../_static/pygments.css",
+                    type: "text/css"
+                },
+                script {
+                    id: "documentation_options",
+                    src: "../_static/documentation_options.js", 
+                    data-url_root: "../" 
+                },
+                style{
+                    "@media only screen {table.full-width-table {width: 100%;}}"
+                }
+            }, 
+            body{
+
+            }
+        }
+    )
+
+    assert str_to_etree(page)== test_elements_page
+
+def test_component_renders_correctly():
+    attr_2 = "hello world"
+    value = 0
+    page = pysx! (
+        Scaffold{
+            testeProp: 1, 
+            div {
+                attr-1: "red", 
+                attr-2: attr_2, 
+                attr-3: 0, 
+                value, 
+                div {"Taki"}
+            }, 
+            div { "teste1" }, 
+            div { "teste2" }, 
+            ol {}
+        }
+    )
+
+    assert str_to_etree(page) == str_to_etree(f"<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width' initial-scale='1'></head><body><div attr-1='red' attr-2='hello world' attr-3='0'>0<div>Taki</div></div><div>teste1</div><div>teste2</div><ol></ol></body></html>")
+
+
+def test_for_expression():
+    word_list = ["hello world", "bye world"]
+    page = pysx!(
+        div {
+            h1 {
+                "List content" 
+            }, 
+            for word in word_list {
+                b {
+                    word
+                }
+            } 
+        }
+    )
+
+    assert str_to_etree(page) == str_to_etree(f"<div><h1>List content</h1><b>hello world</b><b>bye world</b></div>")
+
+def test_complex_for_expression():
+    word_list = ["hello world", "bye world"]
+    page = pysx!(
+        div {
+            h1 {
+                "List content" 
+            }, 
+            for i, word in enumerate(word_list) {
+                b {
+                    i
+                }, 
+                b {
+                    word
+                }
+            } 
+        }
+    )
+
+    assert str_to_etree(page) == str_to_etree(f"<div><h1>List content</h1><b>0</b><b>hello world</b><b>1</b><b>bye world</b></div>")
+
+def test_if_helper():
+    is_visible = True
+    page = pysx!(
+        div {
+            h1 {
+                "Testing if" 
+            }, 
+            if is_visible {
+                "hello world"
+            },
+            if not is_visible {
+                "bye world"
+            } else {
+                " still hello world"
+            }
+        }
+    )
+
+    assert str_to_etree(page) == str_to_etree(f"<div><h1>Testing if</h1>hello world still hello world</div>")
+
+def test_if_elif_helper():
+    lit_type = "string"
+    page = pysx!(
+        div {
+            h1 {
+                "Testing if" 
+            }, 
+            if lit_type == "list_lit" {
+                "[]"
+            }
+            elif lit_type == "float" {
+                "3.14"
+            }
+            elif lit_type == "string" {
+                "Hello world"
+            } else {
+                "unknown type"
+            }
+        }
+    )
+
+    assert str_to_etree(page) == str_to_etree(f"<div><h1>Testing if</h1>Hello world</div>")
+
+def test_py_helper():
+    @component
+    def Test(props: Props): 
+        return pysx!(
+            h1 {
+                py { props.prop1 }
+            } 
+        )
+
+    lit_type = "string"
+    page = pysx!(
+        div {
+            h1 {
+               attr-1: py { "i am attribute" }
+               py { ",".join(str(i) for i in [1, 2, 3, 4]) }
+            }, 
+            Test {
+                prop1: py { "i am prop"}
+            }
+        }
+    )
+    assert str_to_etree(page) == str_to_etree(f"<div><h1 attr-1='i am attribute'>1,2,3,4</h1><h1>i am prop</h1></div>")

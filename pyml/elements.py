@@ -1,18 +1,15 @@
 from __future__ import annotations
 from io import StringIO
 from typing import (
-    Callable,
-    TypeVar,
-    ParamSpec,
     Any,
     TypeAlias,
     Mapping,
     Protocol,
     runtime_checkable,
 )
-import time as ptime
 from dataclasses import dataclass, field
 from abc import abstractmethod
+from enum import Enum
 
 
 ATTR_KWARG = "_attrs"
@@ -21,6 +18,11 @@ ATTR_KWARG = "_attrs"
 class HTMLRenderable(Protocol):
     def render(self, buffer: StringIO | None) -> str:
         ...
+
+
+class ElementBuilderType(Enum):
+    Normal = 0
+    Void = 1
 
 
 @runtime_checkable
@@ -53,7 +55,7 @@ Renderable: TypeAlias = SupportsStr | HTMLRenderable | list["Renderable"]
 
 
 @dataclass
-class Element:
+class Element(HTMLRenderable):
     element_tag: str
     is_void: bool
     child: Renderable | None = None
@@ -118,7 +120,7 @@ class Element:
 
 
 @dataclass
-class Siblings:
+class Siblings(HTMLRenderable):
     elements: list[Renderable] = field(default_factory=list)
 
     def render(self, buffer: StringIO | None = None) -> str:
@@ -132,12 +134,17 @@ class Siblings:
                     siblings.render(buffer)
                 case Element():
                     node.render(buffer)
-                case int() | float() | str() | None:
+                case int() | float() | str():
                     buffer.write(str(node))
+                case None:
+                    continue
                 case _:
                     raise NotImplemented("Invalid node child type")
 
         return buffer.getvalue()
+
+
+_builders: dict[str, ElementBuilderType] = {}
 
 
 def _dom_element(element_tag: str) -> ElementBuilder:
@@ -151,6 +158,7 @@ def _dom_element(element_tag: str) -> ElementBuilder:
             {ATTR_KWARG: _attrs if _attrs is not None else {}, **kwargs},
         )
 
+    _builders[element_tag] = ElementBuilderType.Normal
     return element_builder
 
 
@@ -165,7 +173,12 @@ def _void_dom_element(element_tag: str) -> VoidElementBuilder:
             {ATTR_KWARG: _attrs if _attrs is not None else {}, **kwargs},
         )
 
+    _builders[element_tag] = ElementBuilderType.Void
     return void_element_builder
+
+
+def get_builder(element: str) -> ElementBuilderType | None:
+    return _builders.get(element)
 
 
 # Particle builders for void html elements
