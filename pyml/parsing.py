@@ -183,7 +183,6 @@ def parse_py_helper(loc: int, tokens: ParseResults) -> Node:
         raise pp.ParseFatalException(
             f"Error while parsing if helper:\n{tb.format_exc()}"
         )
-    print("returning py expr")
     return pymlast.PyExpr(py_expr)
 
 
