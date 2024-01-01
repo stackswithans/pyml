@@ -33,6 +33,9 @@ class Expander(pymlast.Visitor):
                 return False
         return True
 
+    def escape_expr(self, string: str) -> str:
+        return self._get_format_idx(f"{string}")
+
     def escape_str(self, string: str, in_f_str: bool = True) -> str:
         if not self._is_safe_str_for_f_str(string) and in_f_str:
             return self._get_format_idx(f'"{string}"')

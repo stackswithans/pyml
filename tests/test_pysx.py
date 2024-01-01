@@ -63,6 +63,10 @@ def test_if_elif_helper():
     assert str_to_etree(page) == str_to_etree(f"<div><h1>Testing if</h1>Hello world</div>")
 
 def test_py_helper():
+    @component
+    def Test(props: Props): 
+        return f"<h1>{{0}}</h1>".format(props.prop1 )
+
     lit_type = "string"
-    page = f"<div><h1>{{0}}</h1></div>".format(",".join(str(i) for i in [1, 2, 3, 4]) )
-    assert str_to_etree(page) == str_to_etree(f"<div><h1>1,2,3,4</h1></div>")
+    page = f"<div><h1 attr-1='{{0}}'>{{1}}</h1>{{2}}</div>".format("i am attribute" , ",".join(str(i) for i in [1, 2, 3, 4]) , Test(prop1="i am prop"))
+    assert str_to_etree(page) == str_to_etree(f"<div><h1 attr-1='i am attribute'>1,2,3,4</h1><h1>i am prop</h1></div>")

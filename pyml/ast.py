@@ -41,6 +41,9 @@ class Visitor(Protocol):
     def escape_str(self, string: str, in_f_str: bool = True) -> str:
         ...
 
+    def escape_expr(self, string: str) -> str:
+        ...
+
 
 @dataclass
 class Node:
@@ -161,21 +164,10 @@ class PyExpr(Node, Expr):
     def eval(self, visitor: Visitor, ctx: Node) -> Any:
         match ctx:
             case Attribute():
-                safe_str = visitor.escape_str(str(self.value))
+                safe_str = visitor.escape_expr(self.py_expr)
                 return f"'{safe_str}'"
-            case Literal():
-                if self.lit_type == LiteralType.String:
-                    safe_str = visitor.escape_str(str(self.value))
-                    return f"{safe_str}"
-                else:
-                    return f"{self.value}"
             case Component():
-                safe_str = visitor.escape_str(str(self.value), False)
-                return (
-                    f'"{visitor.escape_str(safe_str)}"'
-                    if self.lit_type == LiteralType.String
-                    else f"{self.value}"
-                )
+                return f"{self.py_expr}"
             case _:
                 raise NotImplementedError(
                     f"Unhandled eval node type: {ctx.__class__.__name__}"
