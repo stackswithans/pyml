@@ -12,13 +12,15 @@ import ast
 LBRACE, RBRACE = map(pp.Literal, "{}")
 COLON = pp.Literal(":")
 
-py_ident = common.identifier
+py_ident = common.identifier + pp.NotAny(LBRACE)
+
 identifier = pp.Word(alphas + "_", alphanums + "_-")
 
 py_helper = pp.Keyword("py") - LBRACE - pp.SkipTo(RBRACE)("py_expr") + RBRACE
+
 expr = py_helper | py_ident | quoted_string | common.number
 
-attribute = identifier("attr") + ":" + expr
+attribute = identifier("attr") + ":" - expr
 attribute_list = pp.DelimitedList(
     attribute, delim=",", allow_trailing_delim=True
 )
@@ -66,13 +68,15 @@ else_block <<= (
 
 element <<= (
     identifier("name")
-    - LBRACE
+    + LBRACE
     - pp.Opt(attribute_list)("attrs")
     - pp.Opt(children)("children")
     - RBRACE
 )
-# element_list = pp.DelimitedList(element | expr, delim=",")
-pysx_parser = pp.StringStart() + children + pp.StringEnd()
+
+top_level_str = quoted_string("top_level_str")
+element_list = pp.DelimitedList(element ^ top_level_str, delim=",")
+pysx_parser = pp.StringStart() - element_list - pp.StringEnd()
 
 # TODO: Add better error messages
 
@@ -101,6 +105,12 @@ def parse_element(loc: int, tokens: ParseResults) -> Node:
 @attribute.set_parse_action
 def parse_attribute(loc: int, tokens: ParseResults) -> Node:
     return Attribute(str(tokens["attr"]), cast(pymlast.Expr, tokens[2]))
+
+
+@top_level_str.set_parse_action
+def parse_str(loc: int, tokens: ParseResults) -> Node:
+    tok = str(tokens[0])
+    return pymlast.Literal(pymlast.LiteralType.String, tok[1 : len(tok) - 1])
 
 
 @expr.set_parse_action

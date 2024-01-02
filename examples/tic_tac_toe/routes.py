@@ -1,9 +1,11 @@
-from flask import Blueprint, render_template, abort, render_template_string
+import expan
+from flask import Blueprint
+from .views.index import Index  # type: ignore
 
 
-routes = Blueprint("routes", __name__)
+routes_bp = Blueprint("routes_bp", __name__)
 
 
-@routes.route("/")
+@routes_bp.route("/")
 def index():
-    return "Tic tac toe"
+    return Index()

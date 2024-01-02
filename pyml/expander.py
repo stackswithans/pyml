@@ -112,7 +112,8 @@ class Expander(pymlast.Visitor):
 
         if not children.is_empty():
             rendered_child = self._expand_children(children)
-            buffer.write(", ")
+            if len(node.props) > 0:
+                buffer.write(", ")
             buffer.write(f"children={rendered_child}")
 
         buffer.write(f")")
