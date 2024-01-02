@@ -1,94 +1,6 @@
 from pyml.macros import pysx
 from pyml.component import component, Props
 from flask import render_template_string, url_for
-"""
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-  <body>
-    <div class="container-fluid h-100">
-      <div id="header" class="row pt-4">
-        <div class="col-sm-1 col-lg-4"></div>
-        <div class="col-sm-10 col-lg-4">
-          <p class = "h1 mb-2"> Tic Tac Toe</p>
-        </div>
-        <div class="col-sm-1 col-lg-4"></div>
-      </div>
-      <div id="board-row" class="row pt-5">
-        <div class="col-sm-12 col-md-8 col-lg-6 mx-auto">
-          <div class="board w-75 h-100">
-            <div data-cell-index="0" id="cell-1" class="grid-cell">
-              <div class="icon-wrapper">
-                <i></i>
-              </div>
-            </div>
-            <div data-cell-index="1" id="cell-2" class="grid-cell">
-              <div class="icon-wrapper">
-                <i></i>
-              </div>
-            </div>
-            <div data-cell-index="2" id="cell-3" class="grid-cell">
-              <div class="icon-wrapper">
-                <i></i>
-              </div>
-            </div>
-            <div data-cell-index="3" id="cell-4" class="grid-cell">
-              <div class="icon-wrapper">
-                <i></i>
-              </div>
-            </div>
-            <div data-cell-index="4" id="cell-5" class="grid-cell">
-              <div class="icon-wrapper">
-                <i></i>
-              </div>
-            </div>
-            <div data-cell-index="5" id="cell-6" class="grid-cell">
-              <div class="icon-wrapper">
-                <i></i>
-              </div>
-            </div>
-            <div data-cell-index="6" id="cell-7" class="grid-cell">
-              <div class="icon-wrapper">
-                <i></i>
-              </div>
-            </div>
-            <div data-cell-index="7" id="cell-8" class="grid-cell">
-              <div class="icon-wrapper">
-                <i></i>
-              </div>
-            </div>
-            <div data-cell-index="8" id="cell-9" class="grid-cell">
-              <div class="icon-wrapper">
-                <i></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="footer-row" class="row pt-5">
-        <div id="footer" class="col-sm-12 col-md-8 col-lg-6">
-          <div class="d-flex justify-content-between">
-            <div id="player-option" class="menu-item">
-              <i class="icon h1 fas fa-user"></i>
-              <h4 id="player-text" class="h4 text-white">Eu</a>
-            </div>
-            <p id="prompt" class="h4 flex-grow-1">Quem começa?</p>
-            <div id="bot-option" class="menu-item">
-              <i class="icon h1 fas fa-desktop"></i>
-              <h4 id="bot-text" class="h4 text-white">Tu</h4>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="minimax.js"></script>
-  </body>
-</html>
-"""
-
 
 @component
 def Page(props: Props):
@@ -119,33 +31,124 @@ def Page(props: Props):
                 }
             }, 
             body{  
-                children
+                children, 
+                script{
+                    type: "text/javascript",  
+                    src: py { url_for("static", filename="minmax.js")} 
+                }
             }
         }
     )
+
+@component
+def Header(props: Props): 
+    return pysx!(
+        div {
+            id: "header", 
+            class: "row pt-4", 
+            div {
+                class: "col-sm-1 col-lg-4"
+            }, 
+            div {
+                class: "col-sm-10 col-lg-4", 
+                p {
+                    class: "h1 mb-2", 
+                    "Tic tac Toe"
+                }
+            }, 
+            div {
+                class: "col-sm-1 col-lg-4"
+            } 
+        }
+    )
+
+@component
+def BoardCell(props: Props): 
+    return pysx!(
+        div {
+            id: py { f"cell-{props.index}" },
+            data-cell-index: py { props.index - 1 }, 
+            div {
+                class: "icon-wrapper", 
+                i {}
+            }
+        }
+    )
+
+
+@component
+def Board(props: Props): 
+    return pysx!(
+        div{
+            id: "board-row",
+            class: "row pt-5", 
+            div {
+                class: "col-sm-12 col-md-8 col-lg-6 mx-auto"
+                div {
+                    class: "board w-75 h-100", 
+                    for i in range(1, 10) {
+                        BoardCell{
+                            index: py { i }
+                        }
+                    }
+                }
+            } 
+     })
+
+
+@component
+def Footer(props: Props): 
+    return pysx!(
+        div {
+            id: "footer-row", 
+            class: "row pt-5", 
+            div { 
+                id: "footer", 
+                class: "col-sm-12 col-md-8 col-lg-6", 
+                div{
+                    class: "d-flex justify-content-between", 
+                    div {
+                        id: "player-option", 
+                        class: "menu-item", 
+                        i {
+
+                        }, 
+                        h4{
+                            id: "player-text", 
+                            class: "h4 text-white", 
+                            "Eu"
+                        } 
+                    }, 
+                    p { 
+                        id: "player-text", 
+                        class: "h4 flex-grow-1",  
+                        "Quem começa?"
+                    },
+                    div {
+                        id: "bot-option", 
+                        class: "menu-item", 
+                        i {
+
+                        }, 
+                        h4{
+                            id: "bot-text", 
+                            class: "h4 text-white", 
+                            "Tu"
+                        } 
+                    } 
+                }
+            }
+
+        })
 
 def Index(): 
     return render_template_string(pysx!(
         Page {
             main {
                 class: "container-fluid h-100",
-                div {
-                    id: "header", 
-                    class: "row pt-4", 
-                    div {
-                        class: "col-sm-1 col-lg-4"
-                    }, 
-                    div {
-                        class: "col-sm-10 col-lg-4", 
-                        p {
-                            class: "h1 mb-2", 
-                            "Tic tac Toe"
-                        }
-                    }, 
-                    div {
-                        class: "col-sm-1 col-lg-4"
-                    } 
-                }
+                Header {}, 
+                Board {},  
+                Footer {}
             }
         }
     ))

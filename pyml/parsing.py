@@ -16,7 +16,12 @@ py_ident = common.identifier + pp.NotAny(LBRACE)
 
 identifier = pp.Word(alphas + "_", alphanums + "_-")
 
-py_helper = pp.Keyword("py") - LBRACE - pp.SkipTo(RBRACE)("py_expr") + RBRACE
+py_helper = (
+    pp.Keyword("py")
+    - LBRACE
+    - pp.SkipTo(RBRACE, ignore=quoted_string)("py_expr")
+    + RBRACE
+)
 
 expr = py_helper | py_ident | quoted_string | common.number
 
