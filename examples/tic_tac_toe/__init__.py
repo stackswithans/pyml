@@ -1,7 +1,7 @@
 import expan
 import os
 from flask import Flask
-from .pages import Index  # type: ignore
+from .index import Index  # type: ignore
 
 
 def create_app(test_config=None):

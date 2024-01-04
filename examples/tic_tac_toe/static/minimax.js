@@ -208,7 +208,6 @@ function startGame(startingPlayer) {
 }
 
 window.addEventListener("load", () => {
-    alert("hello world");
     //Add event listener to start option
     document.querySelector("#player-option").addEventListener("click", () => {
         if (current_player != null) clearBoard();
