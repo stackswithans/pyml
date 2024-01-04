@@ -35,7 +35,11 @@ def Page(props: Props):
                 script{
                     type: "text/javascript",  
                     src: py { url_for("static", filename="minmax.js")} 
-                }
+                },
+                script{
+                    type: "text/javascript",
+                    src: "https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"
+                } 
             }
         }
     )
@@ -67,11 +71,12 @@ def BoardCell(props: Props):
     return pysx!(
         div {
             id: py { f"cell-{props.index}" },
+            class: "grid-cell d-flex align-items-center justify-content-center", 
             data-cell-index: py { props.index - 1 }, 
-            div {
-                class: "icon-wrapper", 
-                i {}
-            }
+            iconify-icon{
+                icon: "", 
+                class: "h1 font-lg" 
+            } 
         }
     )
 
@@ -109,30 +114,33 @@ def Footer(props: Props):
                     class: "d-flex justify-content-between", 
                     div {
                         id: "player-option", 
-                        class: "menu-item", 
-                        i {
-
+                        class: "menu-item d-flex justify-content-center align-items-center", 
+                        iconify-icon {
+                            icon: "fontisto:user-secret", 
+                            class: "me-3 mb-0 h4"
                         }, 
                         h4{
                             id: "player-text", 
-                            class: "h4 text-white", 
+                            class: "h4 text-white mb-0", 
                             "Eu"
                         } 
                     }, 
                     p { 
-                        id: "player-text", 
+                        id: "prompt", 
                         class: "h4 flex-grow-1",  
                         "Quem começa?"
                     },
                     div {
                         id: "bot-option", 
-                        class: "menu-item", 
-                        i {
+                        class: "menu-item d-flex justify-content-center align-items-center", 
+                        iconify-icon {
+                            icon: "fontisto:desktop", 
+                            class: "me-3 mb-0 h4"
 
                         }, 
                         h4{
                             id: "bot-text", 
-                            class: "h4 text-white", 
+                            class: "h4 text-white mb-0", 
                             "Tu"
                         } 
                     } 
@@ -145,7 +153,7 @@ def Index():
     return render_template_string(pysx!(
         Page {
             main {
-                class: "container-fluid h-100",
+                class: "container-fluid h-100 py-2",
                 Header {}, 
                 Board {},  
                 Footer {}

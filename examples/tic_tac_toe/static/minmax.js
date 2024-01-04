@@ -1,6 +1,6 @@
 //Code for each symbol
-let X = "h1 fas fa-times";
-let O = "h1 far fa-circle";
+let X = "uil:times";
+let O = "uil:circle";
 //Player symbol
 let PLAYER = { id: "PLAYER", symbol: null };
 let BOT = { id: "BOT", symbol: null };
@@ -33,7 +33,9 @@ let game_over = false;
 //Function that updates a cell with
 //the given symbol
 function updateCell(cell, symbol) {
-    $("#cell-" + cell + " i").addClass(symbol);
+    const cellEl = document.querySelector(`#cell-${cell} iconify-icon`);
+    cellEl.setAttribute("icon", symbol);
+    cellEl.classList.remove("d-none");
 }
 
 //Check the board for the win conditions
@@ -63,11 +65,7 @@ function getScore(grid, player) {
     for (cells of win_conds) {
         win = evaluteCondition(cells, grid);
         if (win) {
-            if (player == BOT) {
-                return WIN;
-            } else {
-                return LOSE;
-            }
+            return player == BOT ? WIN : LOSE;
         }
     }
     if (isFull(grid)) {
@@ -79,20 +77,17 @@ function getScore(grid, player) {
 function isGameOver() {
     //Check conditions
     let win = false;
+    const game_prompt = document.querySelector("#prompt");
     for (cells of win_conds) {
         win = evaluteCondition(cells, board);
         if (win) {
-            if (current_player == PLAYER) {
-                $("#prompt").html("Ganhaste.");
-            } else {
-                $("#prompt").html("Ganhei :-)");
-            }
+            game_prompt.innerHTML =
+                current_player == PLAYER ? "Ganhaste." : "Ganhei :-)";
             game_over = true;
-            return null;
         }
     }
     if (isFull(board)) {
-        $("#prompt").html("Empate");
+        game_prompt.innerHTML = "Empate";
         //end the game
         game_over = true;
     }
@@ -100,29 +95,33 @@ function isGameOver() {
 
 //update the game based on the board
 function updateGameState(grid) {
-    let i;
-    for (i = 0; i < 9; i++) {
-        if (grid[i] == "x") {
-            updateCell(i + 1, X);
-        } else if (grid[i] == "o") {
-            updateCell(i + 1, O);
+    for (let i = 0; i < 9; i++) {
+        if (grid[i] == "") {
+            continue;
         }
+        updateCell(i + 1, grid[i] == "x" ? X : O);
     }
     isGameOver();
 }
 
 function clearBoard() {
     current_player = null;
-    $(".grid-cell i").removeClass(X);
-    $(".grid-cell i").removeClass(O);
+    const gridCellsIcons = document.querySelectorAll(".grid-cell iconify-icon");
+
+    gridCellsIcons.forEach((iconEl) => {
+        iconEl.setAttribute("icon", "");
+        iconEl.classList.add("d-none");
+    });
+
     board = ["", "", "", "", "", "", "", "", ""];
     game_over = false;
 }
 //Function that registers player's moves
 
-function getPlayerMove() {
+function getPlayerMove(event) {
     if (current_player != PLAYER || game_over) return null;
-    cell = parseInt($(this).data("cell-index"));
+    const cellNum = event.target.dataset.cellIndex;
+    cell = parseInt(cellNum);
     if (board[cell] == "") {
         board[cell] = PLAYER.symbol;
         updateGameState(board);
@@ -162,8 +161,8 @@ function minimax(grid, player) {
 function getBotMove() {
     let scores = [];
     let moves = [];
-    let i;
-    for (i = 0; i < 9; i++) {
+
+    for (let i = 0; i < 9; i++) {
         if (board[i] == "") {
             board[i] = BOT.symbol;
             scores.push(minimax(board, BOT));
@@ -177,22 +176,25 @@ function getBotMove() {
 
 function startBotTurn() {
     current_player = BOT;
-    $("#prompt").html("Pensando...");
+    const gamePrompt = document.querySelector("#prompt");
+    gamePrompt.innerHTML = "Pensando...";
     getBotMove();
     updateGameState(board);
     if (!game_over) {
         current_player = PLAYER;
-        $("#prompt").html("Tua vez.");
+        gamePrompt.innerHTML = "Tua vez.";
     }
 }
 
-//Function that starts the game loop
 function startGame(startingPlayer) {
     current_player = startingPlayer;
     //Add event listener to the grid
-    $(".grid-cell").on("click", getPlayerMove);
-    $("#player-text").html("Eu recomeço");
-    $("#bot-text").html("Tu recomeças");
+    //
+    document
+        .querySelectorAll(".grid-cell")
+        .forEach((cell) => cell.addEventListener("click", getPlayerMove));
+    document.querySelector("#player-text").innerHTML = "Eu recomeço";
+    document.querySelector("#bot-text").innerHTML = "Tu recomeças";
     //Check whose is starts game
     if (startingPlayer == BOT) {
         BOT.symbol = "x";
@@ -201,18 +203,19 @@ function startGame(startingPlayer) {
     } else {
         PLAYER.symbol = "x";
         BOT.symbol = "o";
-        $("#prompt").html("Tua vez.");
+        document.querySelector("#prompt").innerHTML = "Tua vez.";
     }
 }
 
-$(document).ready(function () {
+window.addEventListener("load", () => {
+    alert("hello world");
     //Add event listener to start option
-    $("#player-option").on("click", function () {
+    document.querySelector("#player-option").addEventListener("click", () => {
         if (current_player != null) clearBoard();
         startGame(PLAYER);
     });
 
-    $("#bot-option").on("click", function () {
+    document.querySelector("#bot-option").addEventListener("click", () => {
         if (current_player != null) clearBoard();
         startGame(BOT);
     });

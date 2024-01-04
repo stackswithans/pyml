@@ -59,8 +59,10 @@ class Expander(pymlast.Visitor):
     def visit_element(self, node: pymlast.Element):
         builder_ty = elements.get_builder(node.name)
         if not builder_ty:
-            raise Exception("Invalid element used!!!")
-        is_void = builder_ty == elements.ElementBuilderType.Void
+            # Custom element
+            is_void = False
+        else:
+            is_void = builder_ty == elements.ElementBuilderType.Void
         if is_void and not node.children.is_empty():
             raise Exception(f"Void element {node.name} cannot have children!!!")
 

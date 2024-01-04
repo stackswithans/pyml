@@ -26,13 +26,6 @@ p{
     margin-right: 0.5rem;
 }
 
-.icon-wrapper{
-    position: absolute;
-    left: 50%;
-    top:50%;
-    transform: translate(-50%,-50%);
-    max-width: 10em;
-}
 
 #header{
     height: 20%;
@@ -113,10 +106,6 @@ p{
   #footer{
     margin-left: 0%;
     margin-right: 0%;
-  }
-
-  #player-option *,#bot-option *{
-    display: block;
   }
 
   .icon{
