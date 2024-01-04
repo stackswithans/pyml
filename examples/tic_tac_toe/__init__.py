@@ -1,7 +1,7 @@
+import expan
 import os
-
 from flask import Flask
-from .routes import routes_bp
+from .pages import Index  # type: ignore
 
 
 def create_app(test_config=None):
@@ -24,5 +24,8 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    app.register_blueprint(routes_bp, url_prefix="/")
+    @app.route("/")
+    def index():
+        return Index()
+
     return app
