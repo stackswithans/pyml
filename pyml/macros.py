@@ -12,8 +12,13 @@ from pyml.expander import Expander
 @expan.expr_macro
 def pysx(arg: str) -> str:
     # TODO: Handle syntax errors
-    root: Node = cast(Node, pymlparsing.pysx_parser.parse_string(arg, True)[0])
-
+    try:
+        root: Node = cast(
+            Node, pymlparsing.pysx_parser.parse_string(arg, True)[0]
+        )
+    except pp.ParseSyntaxException as pe:
+        print(pe.explain(), file=sys.stderr)
+        raise Exception("Failed to parse macro")
     # pprint.pprint(root)
     buffer = StringIO()
     expander = Expander(root, buffer)
