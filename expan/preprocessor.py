@@ -18,9 +18,7 @@ class PyPreprocessor:
     parser: pp.ParserElement = cast(pp.ParserElement, None)
 
     def __init__(self):
-        if PyPreprocessor.parser is None:
-            PyPreprocessor.parser = self.build_parser()
-
+        self.parser = self.build_parser()
         self.macro_calls = {}
 
     def parse_macro_expr(self, loc: int, tokens: pp.ParseResults):
@@ -41,11 +39,11 @@ class PyPreprocessor:
         expr_with_parens = pp.Char("(") + ... + ")" | pp.Char("{") + ... + "}"
         macro_expr = (
             macro_identifier.set_results_name("fn")
-            + "("
-            + pp.SkipTo(
+            - "("
+            - pp.SkipTo(
                 ")", include=True, ignore=expr_with_parens
             ).set_results_name("arg")
-            + pp.White()[...].set_results_name("whitespace").leave_whitespace()
+            - pp.White()[...].set_results_name("whitespace").leave_whitespace()
         )
         macro_expr.set_parse_action(self.parse_macro_expr)
 

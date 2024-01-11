@@ -16,6 +16,7 @@ class MacroLoader(SourceFileLoader):
         return super().get_data(path)
 
     def exec_module(self, module: ModuleType):
+
         src = self.get_data(self.path)
         src = self.preproc.preprocess_src(src.decode())
         try:

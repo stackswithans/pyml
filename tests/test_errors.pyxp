@@ -1,0 +1,31 @@
+from pyml.macros import pysx
+from pyml.component import component, Props
+
+@component
+def Scaffold(props: Props):
+    children = props.children 
+    return pysx!(
+        "<!DOCTYPE html>", 
+        html {
+            head {
+                meta {
+                    charset: "utf-8"
+                }, 
+                meta {
+                    name: "viewport", 
+                    content: "width=device-width", 
+                    initial-scale: 1
+                } 
+            }, 
+            body{  
+                children
+            }, 
+        }
+    )
+
+def test_scaffold_expasion(): 
+    return pysx!(
+        Scaffold {
+
+        }
+    )
