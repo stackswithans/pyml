@@ -23,7 +23,12 @@ class MacroLoader(SourceFileLoader):
             src = self.preproc.preprocess_src(str(self.path), src.decode())
             exec(src, module.__dict__)
         except ExpansionError as e:
-            print(e.detail, file=sys.stderr)
+            print(
+                e.explain(
+                    f"Error while performing expansion of imported module"
+                ),
+                file=sys.stderr,
+            )
             sys.exit(1)
         except Exception as e:
             raise ImportError(name=self.fullname, path=str(self.path)) from e

@@ -40,7 +40,7 @@ def main(argv: list[str] | None = None):
         res = expand_src(args.src)
     except ExpansionError as e:
         print(
-            e.detail,
+            e.explain(),
             file=sys.stderr,
         )
         sys.exit(1)
