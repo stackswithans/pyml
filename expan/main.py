@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 from expan.preprocessor import PyPreprocessor
+from expan.error import ExpansionError
 import traceback as tb
 
 path = os.path
@@ -12,7 +13,7 @@ def expand_src(src_path: str):
         src = f.read()
 
     preproc = PyPreprocessor()
-    return preproc.preprocess_src(src)
+    return preproc.preprocess_src(path.abspath(src_path), src)
 
 
 def main(argv: list[str] | None = None):
@@ -37,9 +38,9 @@ def main(argv: list[str] | None = None):
 
     try:
         res = expand_src(args.src)
-    except Exception:
+    except ExpansionError as e:
         print(
-            f"Unexpected error occured while expanding file '{args.src}': \n{tb.format_exc()}",
+            e.detail,
             file=sys.stderr,
         )
         sys.exit(1)

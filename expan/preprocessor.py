@@ -1,8 +1,10 @@
 import sys
 import os
+from expan.error import ExpansionError, format_expansion_err
 from typing import Any, cast
 from dataclasses import dataclass
 from pyparsing import ParserElement, alphas, alphanums
+import pyparsing
 import pyparsing as pp
 import builtins
 
@@ -11,6 +13,7 @@ import builtins
 class MacroCall:
     fn: str
     arg: str
+    loc: int
 
 
 class PyPreprocessor:
@@ -19,14 +22,18 @@ class PyPreprocessor:
 
     def __init__(self):
         self.parser = self.build_parser()
-        self.macro_calls = {}
+        self.macro_calls: dict[str, MacroCall] = {}
+        self.current_src = ""
+        self.current_path = ""
 
     def parse_macro_expr(self, loc: int, tokens: pp.ParseResults):
         macro_fn = str(tokens["fn"]).replace("!", "")
         whitespace = "".join(tokens["whitespace"])
 
         call_key = f"{self.CALL_SITE_PREFIX}{len(self.macro_calls)}"
-        self.macro_calls[call_key] = MacroCall(macro_fn, str(tokens["arg"]))
+        self.macro_calls[call_key] = MacroCall(
+            macro_fn, str(tokens["arg"]), loc
+        )
         return [f"{call_key}{whitespace}"]
 
     def build_parser(self) -> pp.ParserElement:
@@ -65,11 +72,24 @@ class PyPreprocessor:
                 # TODO: Customize error message for when macro function not found
                 raise e
 
-            expand_result: str = macro_fn(macro_call.arg)
-            expanded_src = expanded_src.replace(key, expand_result)
+            try:
+                expand_result: str = macro_fn(macro_call.arg)
+                expanded_src = expanded_src.replace(key, expand_result)
+            except ExpansionError as e:
+                e.detail = format_expansion_err(
+                    self.current_src,
+                    macro_call.loc,
+                    self.current_file,
+                    macro_call.fn,
+                    macro_call.arg,
+                    e,
+                )
+                raise e from None
         return expanded_src
 
-    def preprocess_src(self, src: str) -> str:
+    def preprocess_src(self, path: str, src: str) -> str:
+        self.current_file = path
+        self.current_src = src
         processed_src = "".join(self.parser.parse_string(src))
         im_module_dict = dict(builtins.__dict__)
         im_module_dict.update({key: "" for key in self.macro_calls})
