@@ -47,6 +47,9 @@ class Visitor(Protocol):
 
 @dataclass
 class Node:
+    src: str
+    loc: int
+
     def visit(self, visitor: Visitor):
         cls_name = self.__class__.__name__
 

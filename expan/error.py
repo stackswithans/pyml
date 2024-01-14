@@ -36,10 +36,19 @@ class ExpansionError(Exception):
     ):
         macro_lineno = pyparsing.lineno(loc, original_src)
         macro_col = pyparsing.col(loc, original_src)
-
         # Add error marker to line
         arg_lines = macro_args.split("\n")
-        err_marker = termcolor.colored("-" * (self.col - 1) + "^\n\n", "red")
+        ident_spaces = "    "
+        marker_col = (
+            len(ident_spaces)
+            + len(macro_fn)
+            + (self.col - 1)
+            + 2  # takes '!' and '(' into account
+            if self.line == 1
+            else (self.col - 1)
+        )
+
+        err_marker = termcolor.colored("-" * marker_col + "^\n\n", "red")
         arg_lines.insert(self.line, err_marker)
         macro_args = "\n".join(arg_lines)
         detail_delim = "-" * _get_len_largest_line(arg_lines)
@@ -52,7 +61,7 @@ class ExpansionError(Exception):
         )
         self.detail = f"""\
 {header}
-    {macro_fn}!({macro_args})
+{ident_spaces}{macro_fn}!({macro_args})
 \n{detail_delim}\n
 {msg}
 """
