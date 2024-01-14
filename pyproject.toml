@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 pyparsing = {extras = ["diagrams"], version = "^3.1.1"}
+termcolor = "2.4.0"
 
 
 [tool.poetry.group.dev.dependencies]

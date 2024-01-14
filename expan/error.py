@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import ClassVar
 from functools import reduce
+import termcolor
 import pyparsing
 
 
@@ -38,16 +39,22 @@ class ExpansionError(Exception):
 
         # Add error marker to line
         arg_lines = macro_args.split("\n")
-        err_marker = "-" * (self.col - 1) + "^\n\n"
+        err_marker = termcolor.colored("-" * (self.col - 1) + "^\n\n", "red")
         arg_lines.insert(self.line, err_marker)
         macro_args = "\n".join(arg_lines)
         detail_delim = "-" * _get_len_largest_line(arg_lines)
 
+        msg = termcolor.colored(self.message, "red")
+
+        header = termcolor.colored(
+            f"{src_path}, macro call located at (line {macro_lineno}: col {macro_col})",
+            "red",
+        )
         self.detail = f"""\
-{src_path}, macro call located at (line {macro_lineno}: col {macro_col})
+{header}
     {macro_fn}!({macro_args})
 \n{detail_delim}\n
-{self.message}
+{msg}
 """
 
     def __str__(self) -> str:

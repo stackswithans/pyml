@@ -1,9 +1,7 @@
 import expan
 from expan.error import ExpansionError
-import pprint
 import pyparsing as pp
 import pyml.parsing as pymlparsing
-import sys
 from io import StringIO
 from typing import cast
 from pyml.ast import Node
