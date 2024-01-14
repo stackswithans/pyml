@@ -1,6 +1,6 @@
 import sys
 import os
-from expan.error import ExpansionError, format_expansion_err
+from expan.error import ExpansionError
 from typing import Any, cast
 from dataclasses import dataclass
 from pyparsing import ParserElement, alphas, alphanums
@@ -76,13 +76,12 @@ class PyPreprocessor:
                 expand_result: str = macro_fn(macro_call.arg)
                 expanded_src = expanded_src.replace(key, expand_result)
             except ExpansionError as e:
-                e.detail = format_expansion_err(
+                e.add_detail(
                     self.current_src,
                     macro_call.loc,
                     self.current_file,
                     macro_call.fn,
                     macro_call.arg,
-                    e,
                 )
                 raise e from None
         return expanded_src

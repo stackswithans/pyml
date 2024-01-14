@@ -26,6 +26,6 @@ def pysx(arg: str) -> str:
     except Exception as e:
         match e:
             case pp.ParseException() | pp.ParseFatalException():
-                raise ExpansionError(e.explain(), e.lineno, e.col)
+                raise ExpansionError(str(e), e.lineno, e.col)
             case _:
                 raise e
