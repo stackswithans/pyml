@@ -1,12 +1,11 @@
 import expan
-import pprint
+from expan.error import ExpansionError
 import pyparsing as pp
 import pyml.parsing as pymlparsing
-import sys
 from io import StringIO
 from typing import cast
 from pyml.ast import Node
-from pyml.expander import Expander
+from pyml.expander import Expander, ExpanderException
 
 
 @expan.expr_macro
@@ -16,13 +15,21 @@ def pysx(arg: str) -> str:
         root: Node = cast(
             Node, pymlparsing.pysx_parser.parse_string(arg, True)[0]
         )
-    except pp.ParseSyntaxException as pe:
-        print(pe.explain(), file=sys.stderr)
-        raise Exception("Failed to parse macro")
-    # pprint.pprint(root)
-    buffer = StringIO()
-    expander = Expander(root, buffer)
-    py_str = expander.expand()
-    # print(py_str)
-    buffer.close()
-    return py_str
+        buffer = StringIO()
+        expander = Expander(root, buffer)
+        py_str = expander.expand()
+        # print(py_str)
+        buffer.close()
+        return py_str
+    except Exception as e:
+        match e:
+            case pp.ParseException() | pp.ParseFatalException():
+                raise ExpansionError(str(e), e.lineno, e.col)
+            case ExpanderException(msg, src, loc):
+                raise ExpansionError(
+                    msg,
+                    pp.lineno(loc, src),
+                    pp.col(loc, src),
+                )
+            case _:
+                raise e

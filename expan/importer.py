@@ -3,6 +3,7 @@ from types import ModuleType
 from importlib.abc import PathEntryFinder
 from importlib.machinery import FileFinder, SourceFileLoader
 from expan.preprocessor import PyPreprocessor
+from expan.error import ExpansionError
 
 
 class MacroLoader(SourceFileLoader):
@@ -16,12 +17,21 @@ class MacroLoader(SourceFileLoader):
         return super().get_data(path)
 
     def exec_module(self, module: ModuleType):
+
         src = self.get_data(self.path)
-        src = self.preproc.preprocess_src(src.decode())
         try:
+            src = self.preproc.preprocess_src(str(self.path), src.decode())
             exec(src, module.__dict__)
-        except:
-            raise ImportError(name=self.fullname, path=str(self.path))
+        except ExpansionError as e:
+            print(
+                e.explain(
+                    f"Error while performing expansion of imported module"
+                ),
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        except Exception as e:
+            raise ImportError(name=self.fullname, path=str(self.path)) from e
 
 
 class MacroImporter(PathEntryFinder):

@@ -11,6 +11,13 @@ VisitFn = Callable[["Expander", T], None]
 
 
 @dataclass
+class ExpanderException(Exception):
+    msg: str
+    s: str
+    loc: int
+
+
+@dataclass
 class Expander(pymlast.Visitor):
     PY_STR_DELIM: ClassVar[str] = '"'
 
@@ -58,13 +65,17 @@ class Expander(pymlast.Visitor):
 
     def visit_element(self, node: pymlast.Element):
         builder_ty = elements.get_builder(node.name)
-        if not builder_ty:
-            # Custom element
-            is_void = False
-        else:
-            is_void = builder_ty == elements.ElementBuilderType.Void
+        is_void = (
+            False
+            if not builder_ty  # Custom element
+            else builder_ty == elements.ElementBuilderType.Void
+        )
         if is_void and not node.children.is_empty():
-            raise Exception(f"Void element {node.name} cannot have children!!!")
+            raise ExpanderException(
+                f"Void element '{node.name}' cannot have children",
+                node.src,
+                node.loc,
+            )
 
         self.buffer.write(f"<{node.name}")
 

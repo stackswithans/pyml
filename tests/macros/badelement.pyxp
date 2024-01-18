@@ -1,0 +1,8 @@
+from pyml.macros import pysx
+from pyml.component import component, Props
+
+html = pysx!(
+    input {
+        "sou mau"
+    }
+)

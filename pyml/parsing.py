@@ -87,7 +87,7 @@ pysx_parser = pp.StringStart() - element_list - pp.StringEnd()
 
 # Component name must start with uppercase
 @element.set_parse_action
-def parse_element(loc: int, tokens: ParseResults) -> Node:
+def parse_element(s: str, loc: int, tokens: ParseResults) -> Node:
     ident: str = str(tokens["name"])
     if ident[0].isupper():
         props = {}
@@ -96,45 +96,51 @@ def parse_element(loc: int, tokens: ParseResults) -> Node:
             props[attr.attr] = attr.value
 
         props["children"] = pymlast.Siblings(
-            list(cast(Any, tokens.get("children", [])))
+            s, loc, list(cast(Any, tokens.get("children", [])))
         )
-        return Component(ident, props)
+        return Component(s, loc, ident, props)
     else:
         return Element(
+            s,
+            loc,
             ident,
             list(cast(Any, tokens.get("attrs", []))),
-            pymlast.Siblings(list(cast(Any, tokens.get("children", [])))),
+            pymlast.Siblings(
+                s, loc, list(cast(Any, tokens.get("children", [])))
+            ),
         )
 
 
 @attribute.set_parse_action
-def parse_attribute(loc: int, tokens: ParseResults) -> Node:
-    return Attribute(str(tokens["attr"]), cast(pymlast.Expr, tokens[2]))
+def parse_attribute(s: str, loc: int, tokens: ParseResults) -> Node:
+    return Attribute(s, loc, str(tokens["attr"]), cast(pymlast.Expr, tokens[2]))
 
 
 @top_level_str.set_parse_action
-def parse_str(loc: int, tokens: ParseResults) -> Node:
+def parse_str(s: str, loc: int, tokens: ParseResults) -> Node:
     tok = str(tokens[0])
-    return pymlast.Literal(pymlast.LiteralType.String, tok[1 : len(tok) - 1])
+    return pymlast.Literal(
+        s, loc, pymlast.LiteralType.String, tok[1 : len(tok) - 1]
+    )
 
 
 @expr.set_parse_action
-def parse_expr(loc: int, tokens: ParseResults) -> Node:
+def parse_expr(s: str, loc: int, tokens: ParseResults) -> Node:
     tok = cast(str | int | float | pymlast.PyExpr, tokens[0])
     if isinstance(tok, pymlast.PyExpr):
         return tok
     elif isinstance(tok, int) or isinstance(tok, float):
-        return pymlast.Literal(pymlast.LiteralType.Number, tok)
+        return pymlast.Literal(s, loc, pymlast.LiteralType.Number, tok)
     elif str(tok).startswith("'") or str(tok).startswith('"'):
         return pymlast.Literal(
-            pymlast.LiteralType.String, tok[1 : len(tok) - 1]
+            s, loc, pymlast.LiteralType.String, tok[1 : len(tok) - 1]
         )
     else:
-        return pymlast.Name(tok)
+        return pymlast.Name(s, loc, tok)
 
 
 @for_expr.set_parse_action
-def parse_for_expr(loc: int, tokens: ParseResults) -> Node:
+def parse_for_expr(s: str, loc: int, tokens: ParseResults) -> Node:
     target = str(tokens["target"])
     for_iter = str(tokens["iter"])
     # Parse for expression as a for statement
@@ -147,9 +153,11 @@ def parse_for_expr(loc: int, tokens: ParseResults) -> Node:
         )
 
     return pymlast.ForExpr(
+        s,
+        loc,
         target,
         for_iter,
-        pymlast.Siblings(list(cast(Any, tokens.get("children", [])))),
+        pymlast.Siblings(s, loc, list(cast(Any, tokens.get("children", [])))),
     )
 
 
@@ -163,18 +171,20 @@ def parse_conditional_branch(s: str, loc: int, tokens: ParseResults) -> Node:
             f"Error while parsing if helper:\n{tb.format_exc()}"
         )
     return pymlast.CondBranch(
+        s,
+        loc,
         condition.strip(),
-        pymlast.Siblings(list(cast(Any, tokens.get("children", [])))),
+        pymlast.Siblings(s, loc, list(cast(Any, tokens.get("children", [])))),
     )
 
 
 @else_block.set_parse_action
-def parse_else_block(loc: int, tokens: ParseResults) -> Node:
-    return pymlast.Siblings(list(cast(Any, tokens.get("children", []))))
+def parse_else_block(s: str, loc: int, tokens: ParseResults) -> Node:
+    return pymlast.Siblings(s, loc, list(cast(Any, tokens.get("children", []))))
 
 
 @elif_stmt.set_parse_action
-def parse_elif_stmt(loc: int, tokens: ParseResults) -> Node:
+def parse_elif_stmt(s: str, loc: int, tokens: ParseResults) -> Node:
     return cast(pymlast.CondBranch, tokens[1])
 
 
@@ -187,7 +197,7 @@ def _is_py_expr(node: ast.Module) -> bool:
 
 
 @py_helper.set_parse_action
-def parse_py_helper(loc: int, tokens: ParseResults) -> Node:
+def parse_py_helper(s: str, loc: int, tokens: ParseResults) -> Node:
     py_expr = str(tokens["py_expr"])
 
     try:
@@ -198,22 +208,22 @@ def parse_py_helper(loc: int, tokens: ParseResults) -> Node:
         raise pp.ParseFatalException(
             f"Error while parsing if helper:\n{tb.format_exc()}"
         )
-    return pymlast.PyExpr(py_expr)
+    return pymlast.PyExpr(s, loc, py_expr)
 
 
 @if_stmt.set_parse_action
-def parse_if_stmt(loc: int, tokens: ParseResults) -> Node:
+def parse_if_stmt(s: str, loc: int, tokens: ParseResults) -> Node:
     if_branch = cast(pymlast.CondBranch, tokens[1])
     elif_branches = cast(
         tuple[pymlast.CondBranch], tuple(tokens["elif_branches"])
     )
     else_block = cast(pymlast.Siblings | None, tokens.get("else_block"))
-    return pymlast.If(if_branch, elif_branches, else_block)
+    return pymlast.If(s, loc, if_branch, elif_branches, else_block)
 
 
 @pysx_parser.set_parse_action
-def parse_pysx(loc: int, tokens: ParseResults) -> Node:
+def parse_pysx(s: str, loc: int, tokens: ParseResults) -> Node:
     if len(tokens) == 1:
         return cast(Node, tokens[0])
     else:
-        return pymlast.Siblings(list(tokens))
+        return pymlast.Siblings(s, loc, list(tokens))
