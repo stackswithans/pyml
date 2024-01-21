@@ -22,8 +22,8 @@ The library implements macros by relying on a custom implementation that uses [i
 a custom file extension.
 
 There are basically two steps to using pyml: 
-1 - Generate html in **.pyx** files using the **pysx** macro
-2 - Import the .pyx and accessing the generated html
+1. Generate html in **.pyx** files using the **pysx** macro
+2. Import the .pyx and accessing the generated html
 
 Example: 
 ```python
@@ -51,9 +51,33 @@ print(title)
 ```
 
 
-### Pysx syntax
+### Elements
 
 The syntax used with the pysx macro is html-like and was inspired by [rsx](https://dioxuslabs.com/learn/0.4/reference/rsx).
+In pysx, elements are referenced by the name of the element, followed by their attributes and children in between curly braces: 
+```python
+    h1 = pysx!(h1 {
+        style: "color:blue", 
+        "Hello world"
+    }) # expands to: <h1 style="color: blue">Hello world</h1>
+    
+```
+Void elements like `input` are checked during expansion to make ensure that they don't have children: 
+```python
+    h1 = pysx!(input { "bad child"}) # Error: Void element 'input' cannot have children
+```
+
+### Attributes
+
+### Children
+
+
+### Components
+
+
+
+
+
 
 
 
