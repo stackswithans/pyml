@@ -97,9 +97,79 @@ pysx!(
     }
 )
 ```
+### Conditional rendering
+
+You can use if statements within rsx to render content conditionally:
+```python
+### if_stmt.pyxp
+from pyml.macros import pysx
+
+is_visible = False
+
+page = pysx!(
+    div {
+        if is_visible {
+            "hello world" 
+        },
+    }
+) 
+print(page) <div></div># Hello world
+
+
+# You can also use elif and else statements
+lit_type = "string"
+page = pysx!(
+    div {
+        if lit_type == "list_lit" {
+            "[]"
+        }
+        elif lit_type == "float" {
+            "3.14"
+        }
+        elif lit_type == "string" {
+            "Hello world"
+        } else {
+            "unknown type"
+        }
+    }
+) 
+print(page) # <div>Hello world</div>
+```
+
+### Loops
+
+You can also use for loops within pysx: 
+```python
+### for_stmt.pyxp
+from pyml.macros import pysx
+
+word_list = ["hello world", "bye world"]
+pysx!(
+    div {
+        h1 {
+            "List content" 
+        }, 
+        for i, word in enumerate(word_list) {
+            b {
+                i
+            }, 
+            b {
+                word
+            }
+        } 
+    }
+)
+
+```
+
 ### Components
 
-Components are just decorated functions that return pysx: 
+Components are just functions decorated with the 
+`pyml.component.component` decorator that return pysx.  
+Components are invoked with the `props` arg, which is an object that contains
+all the props that the component was initialized with. The `children` prop 
+is a special prop that can be used to render the child elements  
+passed to the component: 
 ```python
 ### views.pyxp
 from pyml.macros import pysx
@@ -121,7 +191,8 @@ def Scaffold(props: Props):
                 } 
             }, 
             body{  
-                py { props.children } 
+                style: py { f"background-color: {props.bg_color}" }
+                py { props.children }
             }, 
         }
     )
@@ -129,6 +200,7 @@ def Scaffold(props: Props):
 def index(): 
     return pysx!(
         Scaffold {
+            bg_color: "red",
             h1 {
                 "hello world"
             }
@@ -136,3 +208,27 @@ def index():
     )
 
 ```
+Trying to access an unknown prop will result in a runtime error: 
+```python
+### views.pyxp
+from pyml.macros import pysx
+from pyml.component import component, Props
+
+@component
+def Scaffold(props: Props):
+    return pysx!(
+        h1 {
+            py { props.message }
+        }
+    )
+
+def index(): 
+    return pysx!(
+        Scaffold {  
+        } # raises AttributeError: 'Props' object has no attribute 'message'. 
+    )
+
+print(index())
+```
+The above example fails because the `Scaffold` component attempts to get the `message` prop 
+even though it wasn't invoked with it.
