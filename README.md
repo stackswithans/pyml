@@ -67,7 +67,7 @@ Void elements like `input` are checked during expansion to make ensure that they
 h1 = pysx!(input { "bad child"}) # Error: Void element 'input' cannot have children
 ```
 
-### Expression
+### Expressions
 Pysx has the following types of expressions: 
 - Numbers: `1, 2, 1.5, 8`
 - Strings: `"Foo", 'Bar'`
