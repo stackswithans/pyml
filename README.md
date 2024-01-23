@@ -21,7 +21,7 @@ python code. At the time of writing, python does not offer builtin support for s
 The library implements macros by relying on a custom implementation that uses [import hooks](https://docs.python.org/3/reference/import.html) and
 a custom file extension.
 
-There are basically two steps to using pyml: 
+There are two steps to using pyml: 
 1. Generate html in **.pyxp** files using the **pysx** macro
 2. Import the .pyxp file and access the pysx output
 
