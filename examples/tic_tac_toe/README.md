@@ -1,6 +1,6 @@
 # Tic Tac Toe
 
-Tic Tac Toe game made using pyml 
+Tic Tac Toe game made using pyml and flask.
 
 ## How to run
 
