@@ -3,8 +3,7 @@ import time
 from lxml import etree
 from pyml.macros import pysx
 
-from pyml.macros import pysx
-from pyml.component import component, Props
+from pyml import pysx, component, Props
 import sys
 import os
 from typing import Callable, TypeVar, ParamSpec, Any

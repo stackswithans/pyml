@@ -1,13 +1,17 @@
 [tool.poetry]
-name = "pyml"
+name = "pyml3"
 version = "0.1.0"
-description = "Server-side rendering library for python"
+description = "Library for generating HTML through the use of syntactic macros in python"
 authors = ["stackswithans <stexor12@gmail.com>"]
 readme = "README.md"
+packages = [
+    { include = "pyml" },
+    { include = "expan" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-pyparsing = {extras = ["diagrams"], version = "^3.1.1"}
+pyparsing = {version = "^3.1.1"}
 termcolor = "2.4.0"
 
 

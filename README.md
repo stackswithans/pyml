@@ -13,7 +13,7 @@ Pyml is in a very early stage of developmenet. Any feedback, contribuitions or b
 Pyml can be installed using pip:
 
 ```bash
-pip install pyml
+pip install pyml3
 ```` 
 
 ## Using pyml
@@ -36,7 +36,7 @@ contain macro expressions. A macro expression is just like a normal function cal
 if the function name is followed by a '!', the expression is parsed as a macro call.
 """
 
-from pyml.macros import pysx
+from pyml import pysx
 
 title = pysx!( 
     h1 {
@@ -104,7 +104,7 @@ pysx!(
 You can use if statements within rsx to render content conditionally:
 ```python
 ### if_stmt.pyxp
-from pyml.macros import pysx
+from pyml import pysx
 
 is_visible = False
 
@@ -143,7 +143,7 @@ print(page) # <div>Hello world</div>
 You can also use for loops within pysx: 
 ```python
 ### for_stmt.pyxp
-from pyml.macros import pysx
+from pyml import pysx
 
 word_list = ["hello world", "bye world"]
 pysx!(
@@ -174,8 +174,7 @@ is a special prop that can be used to render the child elements
 passed to the component: 
 ```python
 ### views.pyxp
-from pyml.macros import pysx
-from pyml.component import component, Props
+from pyml import pysx, component, Props
 
 @component
 def Scaffold(props: Props):
@@ -213,8 +212,7 @@ def index():
 Trying to access an unknown prop will result in a runtime error: 
 ```python
 ### views.pyxp
-from pyml.macros import pysx
-from pyml.component import component, Props
+from pyml import pysx, component, Props
 
 @component
 def Scaffold(props: Props):
