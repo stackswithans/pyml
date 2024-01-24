@@ -46,7 +46,7 @@ title = pysx!(
 
 
 ### app.py
-import pyml.activate # 'pysx.activate' must appear before importing any .pyxp module
+import pyml.activate # 'pyml.activate' must appear before importing any .pyxp module
 from  .views import title
 
 print(title) # <h1>hello world</h1>
