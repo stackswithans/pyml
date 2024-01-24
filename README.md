@@ -47,7 +47,7 @@ title = pysx!(
 import pysx.activate # 'pysx.activate' must appear before importing any .pyxp module
 from  .views import title
 
-print(title)
+print(title) # <h1>hello world</h1>
 ```
 
 
@@ -113,7 +113,7 @@ page = pysx!(
         },
     }
 ) 
-print(page) <div></div># Hello world
+print(page) # <div></div>
 
 
 # You can also use elif and else statements
@@ -232,3 +232,20 @@ print(index())
 ```
 The above example fails because the `Scaffold` component attempts to get the `message` prop 
 even though it wasn't invoked with it.
+
+### Debugging pysx
+
+If you would like to see the expanded version of a .pyxp for debugging or other purposes, without needing to import in another file, 
+you can use the `expan.main` script: 
+```bash
+python -m expan.main path/to/pyxp/file.pyxp
+```
+The above command prints the expanded source to stdout. If you would like send the output to another file, just
+use the `-o` option: 
+```bash
+python -m expan.main path/to/pyxp/file.pyxp -o path/to/output/file.py
+```
+
+## Example(s)
+
+To see examples of pyml in use, check out the tiny app(s) in the (examples)[examples/] folder.
