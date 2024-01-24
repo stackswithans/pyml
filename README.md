@@ -1,7 +1,7 @@
 # Pyml
 
-Pyml is a python library that allows users to non-static HTML through the use of a custom implementation of syntatic macros for python.
-By leveraging the power of syntatic macros, pyml offers the familiarity and full feature richness of python, with minimal syntatical overhead.
+Pyml is a python library that allows developers to generate non-static HTML through the use of a custom implementation of syntactic macros for python.
+By leveraging the power of syntatic macros, pyml offers the familiarity and full feature richness of python, with minimal syntactical overhead.
 
 Pyml is framework agnostic and can be used with any web framework/server that supports
 the returning HTML strings as a response.
