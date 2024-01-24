@@ -248,4 +248,4 @@ python -m expan.main path/to/pyxp/file.pyxp -o path/to/output/file.py
 
 ## Example(s)
 
-To see examples of pyml in use, check out the tiny app(s) in the (examples)[examples/] folder.
+To see examples of pyml in use, check out the tiny app(s) in the [examples](examples/) folder.
