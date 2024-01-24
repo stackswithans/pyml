@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyml3"
-version = "0.1.0"
+version = "0.1.1"
 description = "Library for generating HTML through the use of syntactic macros in python"
 authors = ["stackswithans <stexor12@gmail.com>"]
 readme = "README.md"
