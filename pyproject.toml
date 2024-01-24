@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "pyml"
+name = "pyml3"
 version = "0.1.0"
 description = "Library for generating HTML through the use of syntactic macros in python"
 authors = ["stackswithans <stexor12@gmail.com>"]

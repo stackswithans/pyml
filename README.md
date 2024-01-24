@@ -13,7 +13,7 @@ Pyml is in a very early stage of developmenet. Any feedback, contribuitions or b
 Pyml can be installed using pip:
 
 ```bash
-pip install pyml
+pip install pyml3
 ```` 
 
 ## Using pyml
