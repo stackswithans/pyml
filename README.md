@@ -3,6 +3,9 @@
 Pyml is a python library that allows users to non-static HTML through the use of a custom implementation of syntatic macros for python.
 By leveraging the power of syntatic macros, pyml offers the familiarity and full feature richness of python, with minimal syntatical overhead.
 
+Pyml is framework agnostic and can be used with any web framework/server that supports
+the returning HTML strings as a response.
+
 Pyml is in a very early stage of developmenet. Any feedback, contribuitions or bug reports will be greatly appreciated.
 
 ## Installation
@@ -12,7 +15,6 @@ Pyml can be installed using pip:
 ```bash
 pip install pyml
 ```` 
-
 
 ## Using pyml
 
